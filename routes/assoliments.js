@@ -138,3 +138,183 @@ router.get('/assignatura/:codi', async (req, res) => {
         const { classe, trimestre } = req.query;
         
         let sql = `
+            SELECT 
+                a.id,
+                a.trimestre,
+                a.assoliment,
+                a.valor_numeric,
+                e.nom as estudiant_nom,
+                e.classe
+            FROM assoliments a
+            JOIN estudiants e ON a.estudiant_id = e.id
+            JOIN assignatures ass ON a.assignatura_id = ass.id
+            WHERE ass.codi = $1
+        `;
+        
+        const params = [codi];
+        let paramIndex = 2;
+
+        if (classe) {
+            sql += ` AND e.classe = $${paramIndex}`;
+            params.push(classe);
+            paramIndex++;
+        }
+
+        if (trimestre) {
+            sql += ` AND a.trimestre = $${paramIndex}`;
+            params.push(trimestre);
+            paramIndex++;
+        }
+
+        sql += ` ORDER BY e.nom, a.trimestre`;
+
+        const result = await query(sql, params);
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error('Error obtenint assoliments de l\'assignatura:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error obtenint els assoliments de l\'assignatura',
+            message: error.message
+        });
+    }
+});
+
+// POST /api/assoliments - Crear un nou assoliment
+router.post('/', async (req, res) => {
+    try {
+        const { estudiant_id, assignatura_id, trimestre, assoliment } = req.body;
+
+        // Validar dades
+        if (!estudiant_id || !assignatura_id || !trimestre || !assoliment) {
+            return res.status(400).json({
+                success: false,
+                error: 'Falten dades obligatòries'
+            });
+        }
+
+        // Validar assoliment
+        if (!['NA', 'AS', 'AN', 'AE'].includes(assoliment)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valor d\'assoliment invàlid'
+            });
+        }
+
+        const valorNumeric = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 }[assoliment];
+
+        const result = await query(`
+            INSERT INTO assoliments (estudiant_id, assignatura_id, trimestre, assoliment, valor_numeric)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+        `, [estudiant_id, assignatura_id, trimestre, assoliment, valorNumeric]);
+
+        res.status(201).json({
+            success: true,
+            data: {
+                id: result.rows[0].id,
+                estudiant_id,
+                assignatura_id,
+                trimestre,
+                assoliment,
+                valor_numeric: valorNumeric
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creant assoliment:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error creant l\'assoliment',
+            message: error.message
+        });
+    }
+});
+
+// PUT /api/assoliments/:id - Actualitzar un assoliment
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { assoliment } = req.body;
+
+        if (!assoliment || !['NA', 'AS', 'AN', 'AE'].includes(assoliment)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valor d\'assoliment invàlid'
+            });
+        }
+
+        const valorNumeric = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 }[assoliment];
+
+        const result = await query(`
+            UPDATE assoliments 
+            SET assoliment = $1, valor_numeric = $2, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $3
+            RETURNING id
+        `, [assoliment, valorNumeric, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Assoliment no trobat'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                id: parseInt(id),
+                assoliment,
+                valor_numeric: valorNumeric
+            }
+        });
+
+    } catch (error) {
+        console.error('Error actualitzant assoliment:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error actualitzant l\'assoliment',
+            message: error.message
+        });
+    }
+});
+
+// DELETE /api/assoliments/:id - Eliminar un assoliment
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await query(`
+            DELETE FROM assoliments 
+            WHERE id = $1
+            RETURNING id
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Assoliment no trobat'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Assoliment eliminat correctament'
+        });
+
+    } catch (error) {
+        console.error('Error eliminant assoliment:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error eliminant l\'assoliment',
+            message: error.message
+        });
+    }
+});
+
+module.exports = router;
