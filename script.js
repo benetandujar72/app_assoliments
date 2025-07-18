@@ -5,16 +5,28 @@ let charts = {};
 let currentTab = 'general';
 
 // ===== CONFIGURACIÓ DE CHARTS =====
-Chart.defaults.font.family = 'Inter, sans-serif';
-Chart.defaults.font.size = 12;
-Chart.defaults.color = '#475569';
-Chart.defaults.plugins.legend.position = 'bottom';
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-Chart.defaults.plugins.legend.labels.padding = 20;
+function initializeChartJS() {
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#475569';
+    Chart.defaults.plugins.legend.position = 'bottom';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.padding = 20;
+}
 
 // ===== INICIALITZACIÓ =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicialitzant aplicació...');
+    
+    // Verificar que Chart.js esté carregat
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js no està carregat');
+        showStatus('error', 'Error: Chart.js no s\'ha carregat correctament. Si us plau, recarrega la pàgina.');
+        return;
+    }
+    
+    // Configurar Chart.js
+    initializeChartJS();
     
     initializeEventListeners();
     initializeScrollEffects();
