@@ -32,7 +32,6 @@ router.get('/', async (req, res) => {
                 a.created_at,
                 e.nom as estudiant_nom,
                 e.classe,
-                ass.codi as assignatura_codi,
                 ass.nom as assignatura_nom
             FROM assoliments a
             JOIN estudiants e ON a.estudiant_id = e.id
@@ -56,7 +55,7 @@ router.get('/', async (req, res) => {
         }
 
         if (assignatura) {
-            sql += ` AND ass.codi = $${paramIndex}`;
+            sql += ` AND ass.nom = $${paramIndex}`;
             params.push(assignatura);
             paramIndex++;
         }
@@ -108,7 +107,6 @@ router.get('/estudiant/:id', async (req, res) => {
                 a.trimestre,
                 a.assoliment,
                 a.valor_numeric,
-                ass.codi as assignatura_codi,
                 ass.nom as assignatura_nom
             FROM assoliments a
             JOIN assignatures ass ON a.assignatura_id = ass.id
@@ -131,10 +129,10 @@ router.get('/estudiant/:id', async (req, res) => {
     }
 });
 
-// GET /api/assoliments/assignatura/:codi - Obtenir assoliments d'una assignatura
-router.get('/assignatura/:codi', async (req, res) => {
+// GET /api/assoliments/assignatura/:nom - Obtenir assoliments d'una assignatura
+router.get('/assignatura/:nom', async (req, res) => {
     try {
-        const { codi } = req.params;
+        const { nom } = req.params;
         const { classe, trimestre } = req.query;
         
         let sql = `
@@ -148,10 +146,10 @@ router.get('/assignatura/:codi', async (req, res) => {
             FROM assoliments a
             JOIN estudiants e ON a.estudiant_id = e.id
             JOIN assignatures ass ON a.assignatura_id = ass.id
-            WHERE ass.codi = $1
+            WHERE ass.nom = $1
         `;
         
-        const params = [codi];
+        const params = [nom];
         let paramIndex = 2;
 
         if (classe) {
@@ -199,31 +197,26 @@ router.post('/', async (req, res) => {
         }
 
         // Validar assoliment
-        if (!['NA', 'AS', 'AN', 'AE'].includes(assoliment)) {
+        const assolimentsValids = ['NA', 'AS', 'AN', 'AE'];
+        if (!assolimentsValids.includes(assoliment)) {
             return res.status(400).json({
                 success: false,
-                error: 'Valor d\'assoliment invàlid'
+                error: 'Assoliment no vàlid'
             });
         }
 
-        const valorNumeric = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 }[assoliment];
+        // Calcular valor numèric
+        const valorNumeric = assolimentsValids.indexOf(assoliment);
 
-        const result = await query(`
+        const result = await run(`
             INSERT INTO assoliments (estudiant_id, assignatura_id, trimestre, assoliment, valor_numeric)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING id
         `, [estudiant_id, assignatura_id, trimestre, assoliment, valorNumeric]);
 
-        res.status(201).json({
+        res.json({
             success: true,
-            data: {
-                id: result.rows[0].id,
-                estudiant_id,
-                assignatura_id,
-                trimestre,
-                assoliment,
-                valor_numeric: valorNumeric
-            }
+            data: { id: result.rows[0].id }
         });
 
     } catch (error) {
@@ -240,23 +233,34 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { assoliment } = req.body;
+        const { estudiant_id, assignatura_id, trimestre, assoliment } = req.body;
 
-        if (!assoliment || !['NA', 'AS', 'AN', 'AE'].includes(assoliment)) {
+        // Validar dades
+        if (!estudiant_id || !assignatura_id || !trimestre || !assoliment) {
             return res.status(400).json({
                 success: false,
-                error: 'Valor d\'assoliment invàlid'
+                error: 'Falten dades obligatòries'
             });
         }
 
-        const valorNumeric = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 }[assoliment];
+        // Validar assoliment
+        const assolimentsValids = ['NA', 'AS', 'AN', 'AE'];
+        if (!assolimentsValids.includes(assoliment)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Assoliment no vàlid'
+            });
+        }
 
-        const result = await query(`
+        // Calcular valor numèric
+        const valorNumeric = assolimentsValids.indexOf(assoliment);
+
+        const result = await run(`
             UPDATE assoliments 
-            SET assoliment = $1, valor_numeric = $2, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $3
+            SET estudiant_id = $1, assignatura_id = $2, trimestre = $3, assoliment = $4, valor_numeric = $5
+            WHERE id = $6
             RETURNING id
-        `, [assoliment, valorNumeric, id]);
+        `, [estudiant_id, assignatura_id, trimestre, assoliment, valorNumeric, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({
@@ -267,11 +271,7 @@ router.put('/:id', async (req, res) => {
 
         res.json({
             success: true,
-            data: {
-                id: parseInt(id),
-                assoliment,
-                valor_numeric: valorNumeric
-            }
+            data: { id: result.rows[0].id }
         });
 
     } catch (error) {
@@ -289,7 +289,7 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await query(`
+        const result = await run(`
             DELETE FROM assoliments 
             WHERE id = $1
             RETURNING id
