@@ -104,9 +104,55 @@ app.get('/debug', (req, res) => {
     res.sendFile(path.join(__dirname, 'debug.html'));
 });
 
-// Ruta de versió simplificada
+// Ruta de versión simplificada
 app.get('/simple', (req, res) => {
     res.sendFile(path.join(__dirname, 'index-simple.html'));
+});
+
+// Ruta de diagnóstico de versión
+app.get('/api/version', (req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+        // Leer contenido de archivos clave
+        const assolimentsContent = fs.readFileSync(path.join(__dirname, 'routes/assoliments.js'), 'utf8');
+        const uploadContent = fs.readFileSync(path.join(__dirname, 'routes/upload.js'), 'utf8');
+        
+        const hasCodiInAssoliments = assolimentsContent.includes('codi');
+        const hasCodiInUpload = uploadContent.includes('codi');
+        const hasNomInAssoliments = assolimentsContent.includes('nom');
+        const hasNomInUpload = uploadContent.includes('nom');
+        
+        res.json({
+            success: true,
+            version: '1.0.0',
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV,
+            files: {
+                'routes/assoliments.js': {
+                    hasCodi: hasCodiInAssoliments,
+                    hasNom: hasNomInAssoliments,
+                    lastModified: fs.statSync(path.join(__dirname, 'routes/assoliments.js')).mtime.toISOString()
+                },
+                'routes/upload.js': {
+                    hasCodi: hasCodiInUpload,
+                    hasNom: hasNomInUpload,
+                    lastModified: fs.statSync(path.join(__dirname, 'routes/upload.js')).mtime.toISOString()
+                }
+            },
+            status: {
+                needsUpdate: hasCodiInAssoliments || hasCodiInUpload,
+                isCorrect: !hasCodiInAssoliments && !hasCodiInUpload && hasNomInAssoliments && hasNomInUpload
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Error verificant versió',
+            message: error.message
+        });
+    }
 });
 
 // Middleware d'error handling
