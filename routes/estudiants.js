@@ -21,7 +21,6 @@ router.get('/', async (req, res) => {
                 e.nom,
                 e.classe,
                 e.created_at,
-                e.updated_at,
                 COUNT(a.id) as total_assoliments,
                 AVG(a.valor_numeric) as mitjana_assoliments
             FROM estudiants e
@@ -44,7 +43,7 @@ router.get('/', async (req, res) => {
             paramIndex++;
         }
 
-        sql += ` GROUP BY e.id, e.nom, e.classe, e.created_at, e.updated_at`;
+        sql += ` GROUP BY e.id, e.nom, e.classe, e.created_at`;
         sql += ` ORDER BY e.nom`;
         sql += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
         params.push(parseInt(limit), parseInt(offset));
@@ -97,13 +96,12 @@ router.get('/:id', async (req, res) => {
                 e.nom,
                 e.classe,
                 e.created_at,
-                e.updated_at,
                 COUNT(a.id) as total_assoliments,
                 AVG(a.valor_numeric) as mitjana_assoliments
             FROM estudiants e
             LEFT JOIN assoliments a ON e.id = a.estudiant_id
             WHERE e.id = $1
-            GROUP BY e.id, e.nom, e.classe, e.created_at, e.updated_at
+            GROUP BY e.id, e.nom, e.classe, e.created_at
         `, [id]);
 
         if (result.rows.length === 0) {
@@ -140,13 +138,12 @@ router.get('/classe/:classe', async (req, res) => {
                 e.nom,
                 e.classe,
                 e.created_at,
-                e.updated_at,
                 COUNT(a.id) as total_assoliments,
                 AVG(a.valor_numeric) as mitjana_assoliments
             FROM estudiants e
             LEFT JOIN assoliments a ON e.id = a.estudiant_id
             WHERE e.classe = $1
-            GROUP BY e.id, e.nom, e.classe, e.created_at, e.updated_at
+            GROUP BY e.id, e.nom, e.classe, e.created_at
             ORDER BY e.nom
             LIMIT $2 OFFSET $3
         `, [classe, parseInt(limit), parseInt(offset)]);
@@ -221,6 +218,7 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const { nom, classe } = req.body;
 
+        // Validacions
         if (!nom || !classe) {
             return res.status(400).json({
                 success: false,
@@ -230,7 +228,7 @@ router.put('/:id', async (req, res) => {
 
         const result = await query(`
             UPDATE estudiants 
-            SET nom = $1, classe = $2, updated_at = CURRENT_TIMESTAMP
+            SET nom = $1, classe = $2
             WHERE id = $3
             RETURNING *
         `, [nom, classe, id]);
@@ -264,8 +262,8 @@ router.delete('/:id', async (req, res) => {
 
         const result = await query(`
             DELETE FROM estudiants 
-            WHERE id = $1 
-            RETURNING *
+            WHERE id = $1
+            RETURNING id
         `, [id]);
 
         if (result.rows.length === 0) {
