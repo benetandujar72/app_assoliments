@@ -255,25 +255,25 @@ router.post('/csv', upload.single('file'), async (req, res) => {
 
                 // Definir les assignatures i els seus trimestres
                 const assignatures = [
-                    { codi: 'LIN', nom: 'Català', camps: ['LIN1', 'LIN2', 'LIN3', 'LINF'] },
-                    { codi: 'ANG', nom: 'Anglès', camps: ['ANG1', 'ANG2', 'ANG3', 'ANGF'] },
-                    { codi: 'FRA', nom: 'Francès', camps: ['FRA1', 'FRA2', 'FRA3', 'FRAF'] },
-                    { codi: 'MAT', nom: 'Matemàtiques', camps: ['MAT1', 'MAT2', 'MAT3', 'MATF'] },
-                    { codi: 'MUS', nom: 'Música', camps: ['MUS1', 'MUS2', 'MUS3', 'MUSF'] },
-                    { codi: 'EC', nom: 'Espai Creatiu', camps: ['EC1', 'EC2', 'EC3', 'ECF'] },
-                    { codi: 'FIS', nom: 'Educació Física', camps: ['FIS1', 'FIS2', 'FIS3', 'FISF'] },
-                    { codi: 'EG', nom: 'Espai Globalitzat', camps: ['EG1', 'EX1', 'EG2', 'EX2', 'EG3', 'EG4', 'EGF'] }
+                    { nom: 'Català', camps: ['LIN1', 'LIN2', 'LIN3', 'LINF'] },
+                    { nom: 'Anglès', camps: ['ANG1', 'ANG2', 'ANG3', 'ANGF'] },
+                    { nom: 'Francès', camps: ['FRA1', 'FRA2', 'FRA3', 'FRAF'] },
+                    { nom: 'Matemàtiques', camps: ['MAT1', 'MAT2', 'MAT3', 'MATF'] },
+                    { nom: 'Música', camps: ['MUS1', 'MUS2', 'MUS3', 'MUSF'] },
+                    { nom: 'Espai Creatiu', camps: ['EC1', 'EC2', 'EC3', 'ECF'] },
+                    { nom: 'Educació Física', camps: ['FIS1', 'FIS2', 'FIS3', 'FISF'] },
+                    { nom: 'Espai Globalitzat', camps: ['EG1', 'EX1', 'EG2', 'EX2', 'EG3', 'EG4', 'EGF'] }
                 ];
 
                 // Inserir assoliments per cada assignatura
                 for (const assignatura of assignatures) {
                     // Obtenir l'ID de l'assignatura
                     const assignaturaResult = await query(`
-                        SELECT id FROM assignatures WHERE codi = $1
-                    `, [assignatura.codi]);
+                        SELECT id FROM assignatures WHERE nom = $1
+                    `, [assignatura.nom]);
                     
                     if (assignaturaResult.rows.length === 0) {
-                        console.log(`⚠️ Assignatura ${assignatura.codi} no trobada, saltant...`);
+                        console.log(`⚠️ Assignatura ${assignatura.nom} no trobada, saltant...`);
                         continue;
                     }
                     
@@ -302,7 +302,7 @@ router.post('/csv', upload.single('file'), async (req, res) => {
                         let trimestre;
                         
                         console.log(`📝 Processant: ${row.NOM} - ${assignatura.nom} - ${camp} = ${assolimentNet}`);
-                        if (assignatura.codi === 'EG') {
+                        if (assignatura.nom === 'Espai Globalitzat') {
                             // Per Espai Globalitzat, els trimestres són especials
                             if (camp === 'EG1' || camp === 'EX1') {
                                 trimestre = '1r trim';
