@@ -4,6 +4,20 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse');
+
+// Verificar variables d'entorn abans d'importar la base de dades
+console.log('🔧 Verificant configuració de base de dades en upload.js...');
+console.log(`📍 DB_HOST: ${process.env.DB_HOST || 'NO CONFIGURAT'}`);
+console.log(`🗄️ DB_NAME: ${process.env.DB_NAME || 'NO CONFIGURAT'}`);
+console.log(`👤 DB_USER: ${process.env.DB_USER || 'NO CONFIGURAT'}`);
+console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+
+// Verificar que les variables d'entorn estan configurades
+if (!process.env.DB_HOST || !process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+    console.error('❌ Variables d\'entorn de la base de dades no configurades en upload.js');
+    console.error('💥 Això pot causar errors de connexió');
+}
+
 const { query, run } = require('../database/db.js');
 
 // Configuració de multer per pujar fitxers

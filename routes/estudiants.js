@@ -1,5 +1,13 @@
 const express = require('express');
 const router = express.Router();
+
+// Verificar variables d'entorn abans d'importar la base de dades
+console.log('🔧 Verificant configuració de base de dades en estudiants.js...');
+console.log(`📍 DB_HOST: ${process.env.DB_HOST || 'NO CONFIGURAT'}`);
+console.log(`🗄️ DB_NAME: ${process.env.DB_NAME || 'NO CONFIGURAT'}`);
+console.log(`👤 DB_USER: ${process.env.DB_USER || 'NO CONFIGURAT'}`);
+console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+
 const { query, run } = require('../database/db.js');
 
 // GET /api/estudiants - Obtenir tots els estudiants amb filtres
