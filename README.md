@@ -10,13 +10,18 @@ Una aplicació web per a l'anàlisi i visualització d'assoliments acadèmics d'
 - **Múltiples vistes**: Pestanyes per a diferents tipus d'anàlisi
 - **Exportació de dades**: Exportació de dades filtrades en format CSV
 - **Disseny responsive**: Interfície adaptada per a diferents dispositius
+- **Base de dades PostgreSQL**: Almacenament persistent de dades
+- **Desplegament en Render**: Configuració per a producció
 
 ## 📋 Requisits
 
 - Node.js (versió 14 o superior)
 - npm o yarn
+- PostgreSQL (per a desenvolupament local)
 
 ## 🛠️ Instal·lació
+
+### Desenvolupament Local
 
 1. **Clona o descarrega el projecte**
    ```bash
@@ -29,15 +34,65 @@ Una aplicació web per a l'anàlisi i visualització d'assoliments acadèmics d'
    npm install
    ```
 
-3. **Inicia el servidor**
+3. **Configura la base de dades local**
+   - Instal·la PostgreSQL
+   - Crea una base de dades anomenada `assoliments_db`
+   - Configura les credencials a `config.dev.env`
+
+4. **Alterna a configuració de desenvolupament**
+   ```powershell
+   .\switch-env.ps1 dev
+   ```
+
+5. **Inicia el servidor**
    ```bash
    npm start
    ```
 
-4. **Obre el navegador**
+6. **Obre el navegador**
    ```
    http://localhost:3000
    ```
+
+### Producció (Render)
+
+L'aplicació està configurada per a desplegament automàtic en Render amb la base de dades PostgreSQL de producció.
+
+**Configuració de producció:**
+- **Host**: `dpg-d1t0j4er433s73eraf60-a.frankfurt-postgres.render.com`
+- **Base de dades**: `assoliments_db`
+- **Usuari**: `assoliments_db_user`
+
+## 🔄 Alternança entre Entorns
+
+### Desenvolupament → Producció
+```powershell
+.\switch-env.ps1 prod
+npm start
+```
+
+### Producció → Desenvolupament
+```powershell
+.\switch-env.ps1 dev
+npm start
+```
+
+### Verificar Connexió de Producció
+```bash
+node test-prod-db.js
+```
+
+## 🐳 Execució amb Docker
+
+### Desenvolupament Local amb Docker
+```bash
+docker-compose up --build
+```
+
+### Producció amb Docker
+```bash
+docker-compose -f docker-compose.prod.yml up --build
+```
 
 ## 📊 Format del CSV
 
@@ -103,12 +158,20 @@ Això inicia el servidor amb nodemon per a recàrrega automàtica.
 
 ```
 grafica-assoliments/
-├── index.html          # Pàgina principal
-├── script.js           # Lògica del frontend
-├── styles.css          # Estils CSS
-├── server.js           # Servidor Express
-├── package.json        # Dependències
-└── README.md          # Aquesta documentació
+├── index.html              # Pàgina principal
+├── script.js               # Lògica del frontend
+├── styles.css              # Estils CSS
+├── server.js               # Servidor Express
+├── package.json            # Dependències
+├── config.env              # Configuració de producció
+├── config.dev.env          # Configuració de desenvolupament
+├── switch-env.ps1          # Script per alternar entorns
+├── test-prod-db.js         # Script per provar connexió de producció
+├── render.yaml             # Configuració per Render
+├── Dockerfile              # Configuració Docker
+├── docker-compose.yml      # Docker Compose per desenvolupament
+├── docker-compose.prod.yml # Docker Compose per producció
+└── README.md              # Aquesta documentació
 ```
 
 ## 🐛 Solució de problemes
@@ -116,6 +179,7 @@ grafica-assoliments/
 ### L'aplicació no carrega
 - Verifica que el servidor està executant-se a `http://localhost:3000`
 - Comprova que no hi ha errors a la consola del navegador
+- Verifica la connexió a la base de dades amb `node test-prod-db.js`
 
 ### Error carregant CSV
 - Verifica que el fitxer és un CSV vàlid
@@ -127,12 +191,18 @@ grafica-assoliments/
 - Verifica que les dades s'han carregat correctament
 - Comprova la consola per a errors JavaScript
 
+### Problemes de connexió a la base de dades
+- Verifica que les credencials són correctes
+- Comprova que la base de dades està accessible
+- En producció, verifica que SSL està configurat correctament
+
 ## 📝 Notes tècniques
 
 - L'aplicació utilitza Chart.js per a les visualitzacions
-- El servidor simula una base de dades amb dades en memòria
-- Per a producció, es recomana integrar amb una base de dades real
-- L'aplicació és compatible amb navegadors moderns
+- Base de dades PostgreSQL per a almacenament persistent
+- Configuració SSL automàtica per a producció
+- Desplegament automàtic en Render
+- Suport per a Docker per a desenvolupament i producció
 
 ## 🤝 Contribucions
 

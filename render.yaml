@@ -11,28 +11,18 @@ services:
       - key: PORT
         value: 3000
       - key: DB_HOST
-        fromDatabase:
-          name: dashboard-postgres
-          property: host
+        value: dpg-d1t0j4er433s73eraf60-a.frankfurt-postgres.render.com
       - key: DB_PORT
-        fromDatabase:
-          name: dashboard-postgres
-          property: port
+        value: 5432
       - key: DB_NAME
-        fromDatabase:
-          name: dashboard-postgres
-          property: database
+        value: assoliments_db
       - key: DB_USER
-        fromDatabase:
-          name: dashboard-postgres
-          property: user
+        value: assoliments_db_user
       - key: DB_PASSWORD
-        fromDatabase:
-          name: dashboard-postgres
-          property: password
-
-databases:
-  - name: dashboard-postgres
-    databaseName: dashboard_assoliments
-    user: dashboard_user
-    plan: starter 
+        value: AfS2hZUG6ovRKpqLlq3W7UNXJJPg0Rrh
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: UPLOAD_MAX_SIZE
+        value: 10485760 

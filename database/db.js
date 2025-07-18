@@ -10,11 +10,19 @@ const pool = new Pool({
     max: 20, // màxim de connexions al pool
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    // Configuració SSL per producció
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
 });
 
 // Event listeners per debugging
 pool.on('connect', () => {
     console.log('🔌 Connexió a PostgreSQL establerta');
+    console.log(`📍 Host: ${process.env.DB_HOST}`);
+    console.log(`🗄️ Base de dades: ${process.env.DB_NAME}`);
+    console.log(`👤 Usuari: ${process.env.DB_USER}`);
+    console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
 });
 
 pool.on('error', (err) => {
