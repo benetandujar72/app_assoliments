@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 require('dotenv').config({ path: './config.env' });
 
-const pool = new Pool({
+const poolConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
     database: process.env.DB_NAME || 'assoliments_db',
@@ -9,8 +9,21 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD || '25@2705BEangu',
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-});
+    connectionTimeoutMillis: 10000,
+    // Configuració SSL per producció
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
+};
+
+console.log('🔧 Configuració de base de dades:');
+console.log(`📍 Host: ${poolConfig.host}`);
+console.log(`🗄️ Base de dades: ${poolConfig.database}`);
+console.log(`👤 Usuari: ${poolConfig.user}`);
+console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
+console.log(`🔒 SSL: ${poolConfig.ssl ? 'Habilitat' : 'Deshabilitat'}`);
+
+const pool = new Pool(poolConfig);
 
 const initDatabase = async () => {
     try {
@@ -65,7 +78,7 @@ const initDatabase = async () => {
 
         // Inserir assignatures per defecte
         const assignatures = [
-            { codi: 'LIN', nom: 'Llengua' },
+            { codi: 'LIN', nom: 'Català' },
             { codi: 'ANG', nom: 'Anglès' },
             { codi: 'FRA', nom: 'Francès' },
             { codi: 'MAT', nom: 'Matemàtiques' },
@@ -85,19 +98,28 @@ const initDatabase = async () => {
         console.log('✅ Assignatures inserides');
 
         console.log('🎉 Base de dades PostgreSQL inicialitzada correctament!');
-        process.exit(0);
+        return true;
 
     } catch (error) {
         console.error('❌ Error inicialitzant la base de dades:', error);
-        process.exit(1);
-    } finally {
-        await pool.end();
+        throw error;
     }
 };
 
 // Executar si es crida directament
 if (require.main === module) {
-    initDatabase();
+    initDatabase()
+        .then(() => {
+            console.log('✅ Inicialització completada');
+            process.exit(0);
+        })
+        .catch((error) => {
+            console.error('💥 Error en inicialització:', error);
+            process.exit(1);
+        })
+        .finally(async () => {
+            await pool.end();
+        });
 }
 
-module.exports = initDatabase; 
+module.exports = { initDatabase, pool }; 

@@ -1,4 +1,5 @@
 const { initializeDatabase } = require('./init-db.js');
+const { initDatabase } = require('./scripts/init-database-postgres.js');
 
 async function startServer() {
     console.log('🚀 Iniciant servidor per a Render...');
@@ -17,7 +18,18 @@ async function startServer() {
             process.exit(1);
         }
         
-        console.log('✅ Base de dades verificada, iniciant servidor...');
+        console.log('✅ Base de dades verificada');
+        
+        // Inicialitzar estructura de la base de dades si és necessari
+        console.log('🔧 Verificant estructura de la base de dades...');
+        try {
+            await initDatabase();
+            console.log('✅ Estructura de la base de dades verificada/creada');
+        } catch (error) {
+            console.warn('⚠️ Error inicialitzant estructura de BD (pot ser que ja existeixi):', error.message);
+        }
+        
+        console.log('✅ Base de dades preparada, iniciant servidor...');
         
         // Importar i iniciar el servidor
         const app = require('./server.js');

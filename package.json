@@ -8,6 +8,7 @@
     "start:prod": "node init-db.js && node server.js",
     "dev": "nodemon server.js",
     "setup": "node setup.js",
+    "setup:prod": "node setup-prod-db.js",
     "init-db": "node scripts/init-database-postgres.js",
     "test-db": "node test-prod-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
