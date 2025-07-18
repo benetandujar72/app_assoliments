@@ -338,11 +338,6 @@ router.post('/csv', upload.single('file'), async (req, res) => {
                         await query(`
                             INSERT INTO assoliments (estudiant_id, assignatura_id, trimestre, assoliment, valor_numeric)
                             VALUES ($1, $2, $3, $4, $5)
-                            ON CONFLICT (estudiant_id, assignatura_id, trimestre) 
-                            DO UPDATE SET 
-                                assoliment = EXCLUDED.assoliment,
-                                valor_numeric = EXCLUDED.valor_numeric,
-                                updated_at = CURRENT_TIMESTAMP
                         `, [studentId, assignaturaId, trimestre, assolimentNet, valorNumeric]);
                         
                         insertedAssoliments++;
