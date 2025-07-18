@@ -343,35 +343,54 @@ function aplicarFiltres() {
 function actualitzarGraficos() {
     const activeTab = document.querySelector('.tab-button.active').dataset.tab;
     console.log(`📊 Actualitzant gràfics per pestanya: ${activeTab}`);
+    console.log(`📊 Dades disponibles: ${filteredData.length} registres`);
     
     if (filteredData.length === 0) {
         console.log('⚠️ No hi ha dades per mostrar gràfics');
+        showStatus('warning', 'No hi ha dades per mostrar amb els filtres actuals');
         return;
     }
     
-    switch (activeTab) {
-        case 'general':
-            crearGraficAssoliments();
-            crearGraficMitjana();
-            crearGraficEvolucio();
-            crearGraficRendiment();
-            break;
-        case 'trimestres':
-            crearGraficTrimestres();
-            crearGraficEvolucioTemporal();
-            break;
-        case 'assignatures':
-            crearGraficAssignatures();
-            crearGraficAssolimentsAssignatures();
-            break;
-        case 'grups':
-            crearGraficClasses();
-            crearGraficDistribucioGrups();
-            break;
-        case 'individual':
-            crearGraficPerfilIndividual();
-            crearGraficEvolucioIndividual();
-            break;
+    try {
+        switch (activeTab) {
+            case 'general':
+                console.log('🔄 Creant gràfics generals...');
+                crearGraficAssoliments();
+                crearGraficMitjana();
+                crearGraficEvolucio();
+                crearGraficRendiment();
+                break;
+            case 'trimestres':
+                console.log('🔄 Creant gràfics de trimestres...');
+                crearGraficTrimestres();
+                crearGraficEvolucioTemporal();
+                break;
+            case 'assignatures':
+                console.log('🔄 Creant gràfics d\'assignatures...');
+                crearGraficAssignatures();
+                crearGraficAssolimentsAssignatures();
+                break;
+            case 'grups':
+                console.log('🔄 Creant gràfics de grups...');
+                crearGraficClasses();
+                crearGraficDistribucioGrups();
+                break;
+            case 'individual':
+                console.log('🔄 Creant gràfics individuals...');
+                crearGraficPerfilIndividual();
+                crearGraficEvolucioIndividual();
+                break;
+            case 'taula':
+                console.log('🔄 Actualitzant taula...');
+                actualitzarTaula();
+                break;
+            default:
+                console.log(`⚠️ Pestanya desconeguda: ${activeTab}`);
+        }
+        console.log('✅ Gràfics actualitzats correctament');
+    } catch (error) {
+        console.error('❌ Error actualitzant gràfics:', error);
+        showStatus('error', 'Error actualitzant gràfics: ' + error.message);
     }
 }
 
@@ -737,33 +756,401 @@ function handleFilterChange(event) {
 
 // ===== PLACEHOLDER FUNCTIONS FOR OTHER CHARTS =====
 function crearGraficTrimestres() {
-    // Implementation for trimestres chart
+    const ctx = document.getElementById('trimestresChart');
+    if (!ctx) return;
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const assoliments = ['NA', 'AS', 'AN', 'AE'];
+    const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+    
+    const datasets = assoliments.map((assoliment, index) => {
+        const data = trimestres.map(trimestre => 
+            filteredData.filter(item => 
+                item.trimestre === trimestre && item.assoliment === assoliment
+            ).length
+        );
+        
+        return {
+            label: ['No Assolit', 'Assolit', 'Notable', 'Excel·lent'][index],
+            data: data,
+            backgroundColor: colors[index],
+            borderColor: colors[index],
+            borderWidth: 2
+        };
+    });
+    
+    if (charts.trimestres) {
+        charts.trimestres.destroy();
+    }
+    
+    charts.trimestres = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: trimestres,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 function crearGraficEvolucioTemporal() {
-    // Implementation for temporal evolution chart
+    const ctx = document.getElementById('evolucioTemporalChart');
+    if (!ctx) return;
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    
+    const datasets = classes.map((classe, index) => {
+        const data = trimestres.map(trimestre => {
+            const items = filteredData.filter(item => 
+                item.trimestre === trimestre && item.classe === classe
+            );
+            if (items.length === 0) return 0;
+            const mitjana = items.reduce((sum, item) => sum + item.valor_numeric, 0) / items.length;
+            return Math.round(mitjana * 100) / 100;
+        });
+        
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        return {
+            label: classe,
+            data: data,
+            borderColor: colors[index % colors.length],
+            backgroundColor: colors[index % colors.length] + '20',
+            borderWidth: 3,
+            fill: false,
+            tension: 0.4
+        };
+    });
+    
+    if (charts.evolucioTemporal) {
+        charts.evolucioTemporal.destroy();
+    }
+    
+    charts.evolucioTemporal = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trimestres,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 3
+                }
+            }
+        }
+    });
 }
 
 function crearGraficAssignatures() {
-    // Implementation for assignatures chart
+    const ctx = document.getElementById('assignaturesChart');
+    if (!ctx) return;
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura_nom))];
+    const mitjanes = assignatures.map(assignatura => {
+        const data = filteredData.filter(item => item.assignatura_nom === assignatura);
+        const mitjana = data.reduce((sum, item) => sum + item.valor_numeric, 0) / data.length;
+        return Math.round(mitjana * 100) / 100;
+    });
+    
+    if (charts.assignatures) {
+        charts.assignatures.destroy();
+    }
+    
+    charts.assignatures = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: assignatures,
+            datasets: [{
+                label: 'Rendiment Mitjà',
+                data: mitjanes,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 3,
+                    ticks: {
+                        stepSize: 0.5
+                    }
+                }
+            }
+        }
+    });
 }
 
 function crearGraficAssolimentsAssignatures() {
-    // Implementation for assoliments per assignatura chart
+    const ctx = document.getElementById('assolimentsAssignaturesChart');
+    if (!ctx) return;
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura_nom))];
+    const assoliments = ['NA', 'AS', 'AN', 'AE'];
+    const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+    
+    const datasets = assoliments.map((assoliment, index) => {
+        const data = assignatures.map(assignatura => 
+            filteredData.filter(item => 
+                item.assignatura_nom === assignatura && item.assoliment === assoliment
+            ).length
+        );
+        
+        return {
+            label: ['No Assolit', 'Assolit', 'Notable', 'Excel·lent'][index],
+            data: data,
+            backgroundColor: colors[index],
+            borderColor: colors[index],
+            borderWidth: 1
+        };
+    });
+    
+    if (charts.assolimentsAssignatures) {
+        charts.assolimentsAssignatures.destroy();
+    }
+    
+    charts.assolimentsAssignatures = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: assignatures,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 function crearGraficClasses() {
-    // Implementation for classes comparison chart
+    const ctx = document.getElementById('classesChart');
+    if (!ctx) return;
+    
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    const assoliments = ['NA', 'AS', 'AN', 'AE'];
+    const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+    
+    const datasets = assoliments.map((assoliment, index) => {
+        const data = classes.map(classe => 
+            filteredData.filter(item => 
+                item.classe === classe && item.assoliment === assoliment
+            ).length
+        );
+        
+        return {
+            label: ['No Assolit', 'Assolit', 'Notable', 'Excel·lent'][index],
+            data: data,
+            backgroundColor: colors[index],
+            borderColor: colors[index],
+            borderWidth: 1
+        };
+    });
+    
+    if (charts.classes) {
+        charts.classes.destroy();
+    }
+    
+    charts.classes = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: classes,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 function crearGraficDistribucioGrups() {
-    // Implementation for group distribution chart
+    const ctx = document.getElementById('distribucioGrupsChart');
+    if (!ctx) return;
+    
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    const counts = classes.map(classe => 
+        filteredData.filter(item => item.classe === classe).length
+    );
+    
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+    
+    if (charts.distribucioGrups) {
+        charts.distribucioGrups.destroy();
+    }
+    
+    charts.distribucioGrups = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: classes,
+            datasets: [{
+                data: counts,
+                backgroundColor: colors.slice(0, classes.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
 }
 
 function crearGraficPerfilIndividual() {
-    // Implementation for individual profile chart
+    const ctx = document.getElementById('perfilIndividualChart');
+    if (!ctx) return;
+    
+    const estudiant = document.getElementById('estudiantFilter').value;
+    if (!estudiant) {
+        // Si no hi ha estudiant seleccionat, mostrar un missatge
+        if (charts.perfilIndividual) {
+            charts.perfilIndividual.destroy();
+        }
+        return;
+    }
+    
+    const estudiantData = filteredData.filter(item => 
+        item.estudiant_nom.includes(estudiant)
+    );
+    
+    const assignatures = [...new Set(estudiantData.map(item => item.assignatura_nom))];
+    const mitjanes = assignatures.map(assignatura => {
+        const data = estudiantData.filter(item => item.assignatura_nom === assignatura);
+        const mitjana = data.reduce((sum, item) => sum + item.valor_numeric, 0) / data.length;
+        return Math.round(mitjana * 100) / 100;
+    });
+    
+    if (charts.perfilIndividual) {
+        charts.perfilIndividual.destroy();
+    }
+    
+    charts.perfilIndividual = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: assignatures,
+            datasets: [{
+                label: `Rendiment de ${estudiant}`,
+                data: mitjanes,
+                backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                borderColor: 'rgba(139, 92, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 3
+                }
+            }
+        }
+    });
 }
 
 function crearGraficEvolucioIndividual() {
-    // Implementation for individual evolution chart
+    const ctx = document.getElementById('evolucioIndividualChart');
+    if (!ctx) return;
+    
+    const estudiant = document.getElementById('estudiantFilter').value;
+    if (!estudiant) {
+        // Si no hi ha estudiant seleccionat, mostrar un missatge
+        if (charts.evolucioIndividual) {
+            charts.evolucioIndividual.destroy();
+        }
+        return;
+    }
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const estudiantData = filteredData.filter(item => 
+        item.estudiant_nom.includes(estudiant)
+    );
+    
+    const mitjanes = trimestres.map(trimestre => {
+        const data = estudiantData.filter(item => item.trimestre === trimestre);
+        if (data.length === 0) return 0;
+        const mitjana = data.reduce((sum, item) => sum + item.valor_numeric, 0) / data.length;
+        return Math.round(mitjana * 100) / 100;
+    });
+    
+    if (charts.evolucioIndividual) {
+        charts.evolucioIndividual.destroy();
+    }
+    
+    charts.evolucioIndividual = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trimestres,
+            datasets: [{
+                label: `Evolució de ${estudiant}`,
+                data: mitjanes,
+                borderColor: 'rgba(16, 185, 129, 1)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 3
+                }
+            }
+        }
+    });
 } 
