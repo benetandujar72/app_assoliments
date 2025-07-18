@@ -66,6 +66,12 @@
                 </div>
                 
                 <div class="header-actions">
+                    <button class="btn btn-secondary" data-action="go-to-stats">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Veure Estadístiques
+                    </button>
                     <button class="btn btn-secondary" data-action="export-data">
                         <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
@@ -187,6 +193,102 @@
                             </svg>
                             Reiniciar
                         </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estadístiques Detallades Section -->
+            <section class="stats-section" id="statsSection" style="display: none;">
+                <div class="stats-header">
+                    <h2 class="stats-title">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Estadístiques Detallades
+                    </h2>
+                    <button class="btn btn-primary" data-action="export-stats">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                        </svg>
+                        Exportar Estadístiques
+                    </button>
+                </div>
+                
+                <div class="stats-content">
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <h3>Resum General</h3>
+                            <div class="stats-table-wrapper">
+                                <table class="stats-table" id="generalStatsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mètrica</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="2">Carregant...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <h3>Per Assignatura</h3>
+                            <div class="stats-table-wrapper">
+                                <table class="stats-table" id="assignaturaStatsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Assignatura</th>
+                                            <th>Total</th>
+                                            <th>% Assolits</th>
+                                            <th>% NA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4">Carregant...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <h3>Per Trimestre</h3>
+                            <div class="stats-table-wrapper">
+                                <table class="stats-table" id="trimestreStatsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Trimestre</th>
+                                            <th>Total</th>
+                                            <th>% Assolits</th>
+                                            <th>% NA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4">Carregant...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <h3>Per Classe</h3>
+                            <div class="stats-table-wrapper">
+                                <table class="stats-table" id="classeStatsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Classe</th>
+                                            <th>Total</th>
+                                            <th>% Assolits</th>
+                                            <th>% NA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4">Carregant...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

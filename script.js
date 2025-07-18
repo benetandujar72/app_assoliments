@@ -33,9 +33,30 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeScrollEffects();
     initializeMicrointeractions();
     
-    // Mostrar mensaje de bienvenida
-    showStatus('info', 'Benvingut al Dashboard d\'Assoliments. Carrega un fitxer CSV per començar.');
+    // Verificar si hi ha dades existents i carregar-les automàticament
+    verificarDadesExistents();
 });
+
+// ===== VERIFICACIÓ DE DADES EXISTENTS =====
+async function verificarDadesExistents() {
+    try {
+        console.log('🔍 Verificant dades existents...');
+        const response = await fetch('/api/assoliments?limit=1');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+            console.log('✅ Hi ha dades existents, carregant automàticament...');
+            showStatus('info', 'Carregant dades existents...');
+            await carregarDadesDelServidor();
+        } else {
+            console.log('ℹ️ No hi ha dades existents');
+            showStatus('info', 'Benvingut al Dashboard d\'Assoliments. Carrega un fitxer CSV per començar.');
+        }
+    } catch (error) {
+        console.log('ℹ️ No hi ha dades existents o error de connexió');
+        showStatus('info', 'Benvingut al Dashboard d\'Assoliments. Carrega un fitxer CSV per començar.');
+    }
+}
 
 // ===== EVENT LISTENERS =====
 function initializeEventListeners() {
@@ -254,6 +275,7 @@ function inicialitzarDashboard() {
     
     // Mostrar seccions
     document.getElementById('filtersSection').style.display = 'block';
+    document.getElementById('statsSection').style.display = 'block';
     document.getElementById('tabsSection').style.display = 'block';
     
     // Omplir filtres
@@ -261,6 +283,9 @@ function inicialitzarDashboard() {
     
     // Afegir event listeners als filtres
     afegirEventListenersFiltres();
+    
+    // Actualitzar estadístiques detallades
+    actualitzarEstadistiquesDetallades();
     
     // Actualitzar gràfics
     actualitzarGraficos();
@@ -359,6 +384,132 @@ function aplicarFiltres() {
     actualitzarGraficos();
     actualitzarTaula();
     updateSummaryTable(); // Actualitzar taula resumen amb els filtres aplicats
+    actualitzarEstadistiquesDetallades(); // Actualitzar estadístiques detallades
+}
+
+// ===== ESTADÍSTIQUES DETALLADES =====
+function actualitzarEstadistiquesDetallades() {
+    actualitzarEstadistiquesGenerals();
+    actualitzarEstadistiquesPerAssignatura();
+    actualitzarEstadistiquesPerTrimestre();
+    actualitzarEstadistiquesPerClasse();
+}
+
+function actualitzarEstadistiquesGenerals() {
+    const tbody = document.querySelector('#generalStatsTable tbody');
+    if (!tbody) return;
+    
+    const totalAlumnes = new Set(filteredData.map(item => item.estudiant_nom)).size;
+    const totalAssoliments = filteredData.length;
+    const assolits = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const noAssolits = filteredData.filter(item => item.assoliment === 'NA').length;
+    const percentAssolits = totalAssoliments > 0 ? Math.round((assolits / totalAssoliments) * 100) : 0;
+    const percentNoAssolits = totalAssoliments > 0 ? Math.round((noAssolits / totalAssoliments) * 100) : 0;
+    
+    const ae = filteredData.filter(item => item.assoliment === 'AE').length;
+    const an = filteredData.filter(item => item.assoliment === 'AN').length;
+    const as = filteredData.filter(item => item.assoliment === 'AS').length;
+    const na = filteredData.filter(item => item.assoliment === 'NA').length;
+    
+    const percentAE = totalAssoliments > 0 ? Math.round((ae / totalAssoliments) * 100) : 0;
+    const percentAN = totalAssoliments > 0 ? Math.round((an / totalAssoliments) * 100) : 0;
+    const percentAS = totalAssoliments > 0 ? Math.round((as / totalAssoliments) * 100) : 0;
+    const percentNA = totalAssoliments > 0 ? Math.round((na / totalAssoliments) * 100) : 0;
+    
+    const mitjanaGeneral = totalAssoliments > 0 ? 
+        (filteredData.reduce((sum, item) => sum + item.valor_numeric, 0) / totalAssoliments).toFixed(2) : '0.00';
+    
+    tbody.innerHTML = `
+        <tr><td>Total Alumnes</td><td>${totalAlumnes}</td></tr>
+        <tr><td>Total Assoliments</td><td>${totalAssoliments}</td></tr>
+        <tr><td>Nº Assolits</td><td>${assolits}</td></tr>
+        <tr><td>% Assolits</td><td class="percentage ${percentAssolits >= 80 ? 'high' : percentAssolits >= 60 ? 'medium' : 'low'}">${percentAssolits}%</td></tr>
+        <tr><td>Nº No Assolits</td><td>${noAssolits}</td></tr>
+        <tr><td>% No Assolits</td><td class="percentage ${percentNoAssolits <= 20 ? 'high' : percentNoAssolits <= 40 ? 'medium' : 'low'}">${percentNoAssolits}%</td></tr>
+        <tr><td>Mitjana General</td><td>${mitjanaGeneral}</td></tr>
+        <tr><td>AE (Excel·lent)</td><td>${ae} (${percentAE}%)</td></tr>
+        <tr><td>AN (Notable)</td><td>${an} (${percentAN}%)</td></tr>
+        <tr><td>AS (Assolit)</td><td>${as} (${percentAS}%)</td></tr>
+        <tr><td>NA (No Assolit)</td><td>${na} (${percentNA}%)</td></tr>
+    `;
+}
+
+function actualitzarEstadistiquesPerAssignatura() {
+    const tbody = document.querySelector('#assignaturaStatsTable tbody');
+    if (!tbody) return;
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura_nom))];
+    const stats = assignatures.map(assignatura => {
+        const data = filteredData.filter(item => item.assignatura_nom === assignatura);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        return { assignatura, total, percentAssolits, percentNA };
+    }).sort((a, b) => b.percentAssolits - a.percentAssolits);
+    
+    tbody.innerHTML = stats.map(stat => `
+        <tr>
+            <td>${stat.assignatura}</td>
+            <td>${stat.total}</td>
+            <td class="percentage ${stat.percentAssolits >= 80 ? 'high' : stat.percentAssolits >= 60 ? 'medium' : 'low'}">${stat.percentAssolits}%</td>
+            <td class="percentage ${stat.percentNA <= 20 ? 'high' : stat.percentNA <= 40 ? 'medium' : 'low'}">${stat.percentNA}%</td>
+        </tr>
+    `).join('');
+}
+
+function actualitzarEstadistiquesPerTrimestre() {
+    const tbody = document.querySelector('#trimestreStatsTable tbody');
+    if (!tbody) return;
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const stats = trimestres.map(trimestre => {
+        const data = filteredData.filter(item => item.trimestre === trimestre);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        return { trimestre, total, percentAssolits, percentNA };
+    });
+    
+    tbody.innerHTML = stats.map(stat => `
+        <tr>
+            <td>${stat.trimestre}</td>
+            <td>${stat.total}</td>
+            <td class="percentage ${stat.percentAssolits >= 80 ? 'high' : stat.percentAssolits >= 60 ? 'medium' : 'low'}">${stat.percentAssolits}%</td>
+            <td class="percentage ${stat.percentNA <= 20 ? 'high' : stat.percentNA <= 40 ? 'medium' : 'low'}">${stat.percentNA}%</td>
+        </tr>
+    `).join('');
+}
+
+function actualitzarEstadistiquesPerClasse() {
+    const tbody = document.querySelector('#classeStatsTable tbody');
+    if (!tbody) return;
+    
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    const stats = classes.map(classe => {
+        const data = filteredData.filter(item => item.classe === classe);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        return { classe, total, percentAssolits, percentNA };
+    }).sort((a, b) => b.percentAssolits - a.percentAssolits);
+    
+    tbody.innerHTML = stats.map(stat => `
+        <tr>
+            <td>${stat.classe}</td>
+            <td>${stat.total}</td>
+            <td class="percentage ${stat.percentAssolits >= 80 ? 'high' : stat.percentAssolits >= 60 ? 'medium' : 'low'}">${stat.percentAssolits}%</td>
+            <td class="percentage ${stat.percentNA <= 20 ? 'high' : stat.percentNA <= 40 ? 'medium' : 'low'}">${stat.percentNA}%</td>
+        </tr>
+    `).join('');
 }
 
 // ===== CHARTS =====
@@ -658,7 +809,110 @@ function handleActionClick(event) {
         case 'export-summary':
             exportSummary();
             break;
+        case 'export-stats':
+            exportStats();
+            break;
+        case 'go-to-stats':
+            goToStats();
+            break;
     }
+}
+
+// ===== NAVIGATION FUNCTIONS =====
+function goToStats() {
+    const statsSection = document.getElementById('statsSection');
+    if (statsSection) {
+        statsSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }
+}
+
+// ===== EXPORT FUNCTIONS =====
+function exportStats() {
+    if (filteredData.length === 0) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    // Crear CSV amb totes les estadístiques
+    const statsData = [];
+    
+    // Estadístiques generals
+    const totalAlumnes = new Set(filteredData.map(item => item.estudiant_nom)).size;
+    const totalAssoliments = filteredData.length;
+    const assolits = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const noAssolits = filteredData.filter(item => item.assoliment === 'NA').length;
+    const percentAssolits = totalAssoliments > 0 ? Math.round((assolits / totalAssoliments) * 100) : 0;
+    const percentNoAssolits = totalAssoliments > 0 ? Math.round((noAssolits / totalAssoliments) * 100) : 0;
+    
+    statsData.push(['ESTADÍSTIQUES GENERALS']);
+    statsData.push(['Mètrica', 'Valor']);
+    statsData.push(['Total Alumnes', totalAlumnes]);
+    statsData.push(['Total Assoliments', totalAssoliments]);
+    statsData.push(['Nº Assolits', assolits]);
+    statsData.push(['% Assolits', `${percentAssolits}%`]);
+    statsData.push(['Nº No Assolits', noAssolits]);
+    statsData.push(['% No Assolits', `${percentNoAssolits}%`]);
+    statsData.push([]);
+    
+    // Estadístiques per assignatura
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura_nom))];
+    statsData.push(['ESTADÍSTIQUES PER ASSIGNATURA']);
+    statsData.push(['Assignatura', 'Total', '% Assolits', '% NA']);
+    
+    assignatures.forEach(assignatura => {
+        const data = filteredData.filter(item => item.assignatura_nom === assignatura);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        statsData.push([assignatura, total, `${percentAssolits}%`, `${percentNA}%`]);
+    });
+    statsData.push([]);
+    
+    // Estadístiques per trimestre
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    statsData.push(['ESTADÍSTIQUES PER TRIMESTRE']);
+    statsData.push(['Trimestre', 'Total', '% Assolits', '% NA']);
+    
+    trimestres.forEach(trimestre => {
+        const data = filteredData.filter(item => item.trimestre === trimestre);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        statsData.push([trimestre, total, `${percentAssolits}%`, `${percentNA}%`]);
+    });
+    statsData.push([]);
+    
+    // Estadístiques per classe
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    statsData.push(['ESTADÍSTIQUES PER CLASSE']);
+    statsData.push(['Classe', 'Total', '% Assolits', '% NA']);
+    
+    classes.forEach(classe => {
+        const data = filteredData.filter(item => item.classe === classe);
+        const total = data.length;
+        const assolits = data.filter(item => item.assoliment !== 'NA').length;
+        const noAssolits = data.filter(item => item.assoliment === 'NA').length;
+        const percentAssolits = total > 0 ? Math.round((assolits / total) * 100) : 0;
+        const percentNA = total > 0 ? Math.round((noAssolits / total) * 100) : 0;
+        
+        statsData.push([classe, total, `${percentAssolits}%`, `${percentNA}%`]);
+    });
+    
+    const csv = statsData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    downloadCSV(csv, 'estadistiques_detallades.csv');
+    showStatus('success', 'Estadístiques exportades correctament');
 }
 
 function resetFiltres() {
