@@ -4,7 +4,11 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-require('dotenv').config({ path: './config.env' });
+
+// Carregar variables d'entorn només en desenvolupament
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config({ path: './config.env' });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;

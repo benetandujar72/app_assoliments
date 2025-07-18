@@ -3,9 +3,22 @@ const { initDatabase } = require('./scripts/init-database-postgres.js');
 
 async function startServer() {
     console.log('🚀 Iniciant servidor per a Render...');
-    console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
+    
+    // Verificar variables d'entorn crítiques
+    const requiredEnvVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    
+    if (missingVars.length > 0) {
+        console.error('❌ Variables d\'entorn faltants:', missingVars);
+        console.error('💥 Sortint del procés...');
+        process.exit(1);
+    }
+    
+    console.log(`🔧 Mode: ${process.env.NODE_ENV || 'production'}`);
     console.log(`📍 Host BD: ${process.env.DB_HOST}`);
     console.log(`🗄️ Base de dades: ${process.env.DB_NAME}`);
+    console.log(`👤 Usuari: ${process.env.DB_USER}`);
+    console.log(`🔑 Contrasenya: ${process.env.DB_PASSWORD ? 'CONFIGURAT' : 'NO CONFIGURAT'}`);
     
     try {
         // Verificar connexió a la base de dades
