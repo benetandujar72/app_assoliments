@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Dashboard Assoliments</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Debug - Dashboard Assoliments</h1>
+            <p>Pàgina de diagnòstic per verificar el funcionament</p>
+        </div>
+
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+            <h3>Tests de Funcionament</h3>
+            <div id="testResults" style="font-family: monospace; font-size: 14px;">
+                <p>Executant tests...</p>
+            </div>
+        </div>
+
+        <div style="padding: 20px; background: #e8f5e8; border-radius: 8px; margin: 20px 0;">
+            <h3>Test de Gràfics</h3>
+            <div style="width: 400px; height: 300px;">
+                <canvas id="testChart"></canvas>
+            </div>
+        </div>
+
+        <div style="padding: 20px; background: #fff3cd; border-radius: 8px; margin: 20px 0;">
+            <h3>Test d'API</h3>
+            <button id="testApiBtn" class="btn">Provar API</button>
+            <div id="apiResults" style="margin-top: 10px; font-family: monospace; font-size: 12px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tests bàsics
+        function runTests() {
+            const results = document.getElementById('testResults');
+            let testResults = '<h4>Resultats dels Tests:</h4>';
+            
+            // Test 1: Chart.js carregat
+            try {
+                if (typeof Chart !== 'undefined') {
+                    testResults += '<p>✅ Chart.js carregat correctament</p>';
+                } else {
+                    testResults += '<p>❌ Chart.js no carregat</p>';
+                }
+            } catch (e) {
+                testResults += '<p>❌ Error carregant Chart.js: ' + e.message + '</p>';
+            }
+            
+            // Test 2: Crear gràfic simple
+            try {
+                const ctx = document.getElementById('testChart');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Test 1', 'Test 2', 'Test 3'],
+                            datasets: [{
+                                data: [30, 40, 30],
+                                backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    testResults += '<p>✅ Gràfic creat correctament</p>';
+                } else {
+                    testResults += '<p>❌ No s\'ha trobat el canvas del test</p>';
+                }
+            } catch (e) {
+                testResults += '<p>❌ Error creant gràfic: ' + e.message + '</p>';
+            }
+            
+            // Test 3: Verificar variables globals
+            try {
+                if (typeof dadesBrutes !== 'undefined') {
+                    testResults += '<p>✅ Variable dadesBrutes definida</p>';
+                } else {
+                    testResults += '<p>⚠️ Variable dadesBrutes no definida (normal si no s\'han carregat dades)</p>';
+                }
+                
+                if (typeof dadesFiltered !== 'undefined') {
+                    testResults += '<p>✅ Variable dadesFiltered definida</p>';
+                } else {
+                    testResults += '<p>⚠️ Variable dadesFiltered no definida (normal si no s\'han carregat dades)</p>';
+                }
+            } catch (e) {
+                testResults += '<p>❌ Error verificant variables: ' + e.message + '</p>';
+            }
+            
+            results.innerHTML = testResults;
+        }
+        
+        // Test d'API
+        async function testAPI() {
+            const apiResults = document.getElementById('apiResults');
+            apiResults.innerHTML = 'Provant API...';
+            
+            try {
+                // Test endpoint classes
+                const classesResponse = await fetch('/api/estudiants/classes');
+                const classesData = await classesResponse.json();
+                
+                let results = '<h4>Resultats API:</h4>';
+                
+                if (classesData.success) {
+                    results += '<p>✅ API classes funcionant: ' + classesData.data.length + ' classes trobades</p>';
+                    results += '<p>Classes: ' + classesData.data.join(', ') + '</p>';
+                } else {
+                    results += '<p>❌ API classes error: ' + classesData.error + '</p>';
+                }
+                
+                // Test endpoint assoliments
+                const assolimentsResponse = await fetch('/api/assoliments?limit=10');
+                const assolimentsData = await assolimentsResponse.json();
+                
+                if (assolimentsData.success) {
+                    results += '<p>✅ API assoliments funcionant: ' + assolimentsData.data.length + ' assoliments trobats</p>';
+                } else {
+                    results += '<p>❌ API assoliments error: ' + assolimentsData.error + '</p>';
+                }
+                
+                apiResults.innerHTML = results;
+                
+            } catch (error) {
+                apiResults.innerHTML = '<p>❌ Error de connexió: ' + error.message + '</p>';
+            }
+        }
+        
+        // Executar tests quan carregui la pàgina
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Debug page loaded');
+            runTests();
+            
+            // Event listener per al botó de test API
+            const testApiBtn = document.getElementById('testApiBtn');
+            if (testApiBtn) {
+                testApiBtn.addEventListener('click', testAPI);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,67 @@
+# Dependències
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables d'entorn
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Fitxers de configuració local
+config.env
+
+# Fitxers temporals
+uploads/
+*.tmp
+*.temp
+
+# Logs
+logs
+*.log
+
+# Directori de cobertura
+coverage/
+
+# Directori de build
+dist/
+build/
+
+# Fitxers del sistema
+.DS_Store
+Thumbs.db
+
+# Fitxers d'IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fitxers de backup
+*.bak
+*.backup
+
+# Fitxers de cache
+.cache/
+.parcel-cache/
+
+# Fitxers de test
+test-results/
+coverage/
+
+# Fitxers de base de dades
+*.sqlite
+*.db
+
+# Fitxers de certificats
+*.pem
+*.key
+*.crt
+
+# Fitxers de configuració local
+config.local.js
+config.local.json 

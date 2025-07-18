@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Assoliments - Versió Simple</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="material-icons" style="vertical-align: middle; margin-right: 15px; font-size: 1.2em; color: var(--primary-warm);">dashboard</span>Dashboard Assoliments - Versió Simple</h1>
+            <p>Versió simplificada per diagnosticar problemes</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <h3><span class="material-icons" style="vertical-align: middle; margin-right: 10px; color: var(--primary-warm);">cloud_upload</span>Carregar Fitxer CSV d'Assoliments</h3>
+            <div class="upload-area" id="uploadArea">
+                <p style="font-size: 1.2em; margin-bottom: 15px;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px; color: var(--accent-warm);">upload_file</span>
+                    Arrossega el fitxer CSV aquí o fes clic per seleccionar
+                </p>
+                <button class="btn" id="selectFileBtn">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">folder_open</span>
+                    Seleccionar Fitxer CSV
+                </button>
+                <input type="file" id="fileInput" accept=".csv" />
+                <p style="margin-top: 15px; color: #7f8c8d;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 16px;">info</span>
+                    Format esperat: Classe, Nom, Assoliments per assignatura i trimestre
+                </p>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <!-- Filtres -->
+            <div class="filters">
+                <h3><span class="material-icons" style="vertical-align: middle; margin-right: 10px; color: var(--primary-warm);">tune</span>Filtres d'Anàlisi</h3>
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="grupFilter">
+                            <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 18px;">school</span>
+                            Grup Classe:
+                        </label>
+                        <select id="grupFilter">
+                            <option value="">Tots els grups</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="alumneFilter">
+                            <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 18px;">person</span>
+                            Alumne:
+                        </label>
+                        <select id="alumneFilter">
+                            <option value="">Tots els alumnes</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="assignaturaFilter">
+                            <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 18px;">menu_book</span>
+                            Assignatura:
+                        </label>
+                        <select id="assignaturaFilter">
+                            <option value="">Totes les assignatures</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="trimestreFilter">
+                            <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 18px;">event</span>
+                            Trimestre:
+                        </label>
+                        <select id="trimestreFilter">
+                            <option value="">Tots els trimestres</option>
+                            <option value="1r trim">1r Trimestre</option>
+                            <option value="2n trim">2n Trimestre</option>
+                            <option value="3r trim">3r Trimestre</option>
+                            <option value="final">Final</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="assolimentFilter">
+                            <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 18px;">grade</span>
+                            Nivell d'Assoliment:
+                        </label>
+                        <select id="assolimentFilter">
+                            <option value="">Tots els nivells</option>
+                            <option value="AE">Excel·lent (AE)</option>
+                            <option value="AN">Notable (AN)</option>
+                            <option value="AS">Suficient (AS)</option>
+                            <option value="NA">No Assoliment (NA)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn" id="resetFiltersBtn">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">refresh</span>
+                        Reiniciar Filtres
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estadístiques generals -->
+            <div class="stats-grid">
+                <div class="stat-card excellent">
+                    <div class="icon">
+                        <span class="material-icons">workspace_premium</span>
+                    </div>
+                    <div class="number" id="totalExcellent">0</div>
+                    <div class="label">Assoliments Excel·lents (AE)</div>
+                </div>
+                <div class="stat-card notable">
+                    <div class="icon">
+                        <span class="material-icons">star</span>
+                    </div>
+                    <div class="number" id="totalNotable">0</div>
+                    <div class="label">Assoliments Notables (AN)</div>
+                </div>
+                <div class="stat-card sufficient">
+                    <div class="icon">
+                        <span class="material-icons">check_circle</span>
+                    </div>
+                    <div class="number" id="totalSufficient">0</div>
+                    <div class="label">Assoliments Suficients (AS)</div>
+                </div>
+                <div class="stat-card no-achievement">
+                    <div class="icon">
+                        <span class="material-icons">error</span>
+                    </div>
+                    <div class="number" id="totalNoAssoliment">0</div>
+                    <div class="label">No Assoliments (NA)</div>
+                </div>
+            </div>
+
+            <!-- Pestanyes de contingut -->
+            <div class="tab-nav">
+                <button class="tab active" data-tab="general">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">dashboard</span>
+                    Visió General
+                </button>
+                <button class="tab" data-tab="taula">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">table_view</span>
+                    Taula Detallada
+                </button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Pestanya General -->
+                <div id="general-tab" class="tab-pane" style="padding: 25px;">
+                    <div class="dashboard-grid">
+                        <div class="chart-container">
+                            <h3>
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 10px; color: var(--primary-warm);">donut_large</span>
+                                Distribució Global d'Assoliments
+                            </h3>
+                            <div class="chart-wrapper">
+                                <canvas id="distribucioGlobalChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 10px; color: var(--success-warm);">trending_up</span>
+                                Evolució per Trimestres
+                            </h3>
+                            <div class="chart-wrapper">
+                                <canvas id="evolucioTrimestreChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestanya Taula Detallada -->
+                <div id="taula-tab" class="tab-pane hidden" style="padding: 25px;">
+                    <div class="table-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 10px; color: var(--primary-warm);">table_view</span>
+                                Taula Detallada d'Assoliments
+                            </h3>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="taulaCount" style="color: #7f8c8d; font-weight: 600;">
+                                    <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 16px;">assessment</span>
+                                    0 registres
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <div style="max-height: 600px; overflow-y: auto;">
+                                <table id="taulaDetallada" style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">person</span>
+                                                Alumne
+                                            </th>
+                                            <th>
+                                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">school</span>
+                                                Grup
+                                            </th>
+                                            <th>
+                                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">menu_book</span>
+                                                Assignatura
+                                            </th>
+                                            <th>
+                                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">event</span>
+                                                Trimestre
+                                            </th>
+                                            <th>
+                                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">grade</span>
+                                                Assoliment
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="taulaBody">
+                                        <!-- Contingut generat dinàmicament -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script-simple.js"></script>
+</body>
+</html> 
