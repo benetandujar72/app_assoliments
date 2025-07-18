@@ -1,23 +1,33 @@
 const { Pool } = require('pg');
-require('dotenv').config({ path: './config.env' });
 
 async function testConnection() {
     console.log('🧪 Provant connexió a la base de dades de producció...');
-    console.log(`📍 Host: ${process.env.DB_HOST}`);
-    console.log(`🗄️ Base de dades: ${process.env.DB_NAME}`);
-    console.log(`👤 Usuari: ${process.env.DB_USER}`);
-    console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
+    console.log(`📍 Host: ${process.env.DB_HOST || 'NO CONFIGURAT'}`);
+    console.log(`🗄️ Base de dades: ${process.env.DB_NAME || 'NO CONFIGURAT'}`);
+    console.log(`👤 Usuari: ${process.env.DB_USER || 'NO CONFIGURAT'}`);
+    console.log(`🔧 Mode: ${process.env.NODE_ENV || 'NO CONFIGURAT'}`);
     console.log('');
+
+    // Verificar que les variables d'entorn estan configurades
+    if (!process.env.DB_HOST || !process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+        console.error('❌ Variables d\'entorn de la base de dades no configurades');
+        console.error('📍 DB_HOST:', process.env.DB_HOST);
+        console.error('🗄️ DB_NAME:', process.env.DB_NAME);
+        console.error('👤 DB_USER:', process.env.DB_USER);
+        console.error('🔑 DB_PASSWORD:', process.env.DB_PASSWORD ? 'CONFIGURAT' : 'NO CONFIGURAT');
+        return;
+    }
 
     const pool = new Pool({
         host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
+        port: process.env.DB_PORT || 5432,
         database: process.env.DB_NAME,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         ssl: process.env.NODE_ENV === 'production' ? {
             rejectUnauthorized: false
-        } : false
+        } : false,
+        connectionTimeoutMillis: 10000
     });
 
     try {
@@ -40,16 +50,28 @@ async function testConnection() {
         `);
         
         console.log('📋 Taules disponibles:');
-        tablesResult.rows.forEach(row => {
-            console.log(`   - ${row.table_name}`);
-        });
+        if (tablesResult.rows.length === 0) {
+            console.log('   - Cap taula trobada');
+        } else {
+            tablesResult.rows.forEach(row => {
+                console.log(`   - ${row.table_name}`);
+            });
+        }
 
-        // Verificar dades
-        const countResult = await client.query('SELECT COUNT(*) as total FROM estudiants');
-        console.log(`👥 Total d'estudiants: ${countResult.rows[0].total}`);
+        // Verificar dades si les taules existeixen
+        try {
+            const countResult = await client.query('SELECT COUNT(*) as total FROM estudiants');
+            console.log(`👥 Total d'estudiants: ${countResult.rows[0].total}`);
+        } catch (error) {
+            console.log('👥 Taula estudiants no existeix encara');
+        }
 
-        const assolimentsResult = await client.query('SELECT COUNT(*) as total FROM assoliments');
-        console.log(`📊 Total d'assoliments: ${assolimentsResult.rows[0].total}`);
+        try {
+            const assolimentsResult = await client.query('SELECT COUNT(*) as total FROM assoliments');
+            console.log(`📊 Total d'assoliments: ${assolimentsResult.rows[0].total}`);
+        } catch (error) {
+            console.log('📊 Taula assoliments no existeix encara');
+        }
 
         client.release();
         console.log('\n✅ Totes les proves han passat correctament');

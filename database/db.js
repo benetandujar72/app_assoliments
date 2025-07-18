@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-require('dotenv').config({ path: '../config.env' });
 
 // Configuració de connexió amb millor gestió d'errors
 const poolConfig = {
@@ -21,7 +20,7 @@ console.log('🔧 Configuració de base de dades:');
 console.log(`📍 Host: ${poolConfig.host}`);
 console.log(`🗄️ Base de dades: ${poolConfig.database}`);
 console.log(`👤 Usuari: ${poolConfig.user}`);
-console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
+console.log(`🔧 Mode: ${process.env.NODE_ENV || 'development'}`);
 console.log(`🔒 SSL: ${poolConfig.ssl ? 'Habilitat' : 'Deshabilitat'}`);
 
 const pool = new Pool(poolConfig);
@@ -51,8 +50,8 @@ const query = async (text, params) => {
         const duration = Date.now() - start;
         console.error(`❌ Error executant query (${duration}ms):`, error.message);
         console.error(`📍 Query: ${text.substring(0, 100)}...`);
-        console.error(`🔧 Mode: ${process.env.NODE_ENV}`);
-        console.error(`📍 Host: ${process.env.DB_HOST}`);
+        console.error(`🔧 Mode: ${process.env.NODE_ENV || 'development'}`);
+        console.error(`📍 Host: ${process.env.DB_HOST || 'localhost'}`);
         throw error;
     }
 };

@@ -2,6 +2,10 @@ const { testConnection } = require('./database/db.js');
 
 async function initializeDatabase() {
     console.log('🔧 Inicialitzant connexió a la base de dades...');
+    console.log(`📍 Host: ${process.env.DB_HOST || 'localhost'}`);
+    console.log(`🗄️ Base de dades: ${process.env.DB_NAME || 'assoliments_db'}`);
+    console.log(`👤 Usuari: ${process.env.DB_USER || 'postgres'}`);
+    console.log(`🔧 Mode: ${process.env.NODE_ENV || 'development'}`);
     
     // Esperar un moment per a que la base de dades estigui disponible
     const maxRetries = 5;
