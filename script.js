@@ -3,6 +3,7 @@ let currentData = [];
 let filteredData = [];
 let charts = {};
 let currentTab = 'general';
+let uploadProgress = 0;
 
 // ===== CONFIGURACIÓ DE CHARTS =====
 function initializeChartJS() {
@@ -178,22 +179,28 @@ function processFile(file) {
 }
 
 async function uploadCSV(csvData, fileName) {
+    showProgressBar();
+    updateProgress(10, 'Preparant fitxer...');
+    
     const formData = new FormData();
     const blob = new Blob([csvData], { type: 'text/csv' });
     formData.append('file', blob, fileName);
     
     try {
+        updateProgress(30, 'Enviant fitxer al servidor...');
         const response = await fetch('/api/upload/csv', {
             method: 'POST',
             body: formData
         });
         
+        updateProgress(60, 'Processant dades...');
         const result = await response.json();
         
         if (result.success) {
             console.log('✅ Fitxer carregat correctament:', result);
             showStatus('success', result.message);
             
+            updateProgress(80, 'Carregant dades...');
             // Carregar dades del servidor després d'un petit delay
             setTimeout(() => {
                 carregarDadesDelServidor();
@@ -204,29 +211,40 @@ async function uploadCSV(csvData, fileName) {
     } catch (error) {
         console.error('❌ Error carregant fitxer:', error);
         showStatus('error', 'Error carregant el fitxer: ' + error.message);
+        hideProgressBar();
     }
 }
 
 // ===== DATA LOADING =====
 async function carregarDadesDelServidor() {
     console.log('📡 Carregant dades del servidor...');
+    updateProgress(85, 'Obtenint dades del servidor...');
     
     try {
         const response = await fetch('/api/assoliments?limit=10000');
         const result = await response.json();
         
         if (result.success) {
+            updateProgress(95, 'Finalitzant càrrega...');
             currentData = result.data;
             filteredData = [...currentData];
             console.log(`✅ Dades carregades: ${currentData.length} assoliments`);
             
-            inicialitzarDashboard();
+            setTimeout(() => {
+                inicialitzarDashboard();
+                updateProgress(100, 'Completat!');
+                setTimeout(() => {
+                    hideProgressBar();
+                    showNavigationMarker();
+                }, 500);
+            }, 500);
         } else {
             throw new Error(result.error || 'Error carregant dades');
         }
     } catch (error) {
         console.error('❌ Error carregant dades:', error);
         showStatus('error', 'Error carregant dades: ' + error.message);
+        hideProgressBar();
     }
 }
 
@@ -246,6 +264,9 @@ function inicialitzarDashboard() {
     
     // Actualitzar gràfics
     actualitzarGraficos();
+    
+    // Actualitzar taula resumen
+    updateSummaryTable();
     
     // Afegir funcionalitats extra
     afegirFuncionalitatsExtra();
@@ -337,6 +358,7 @@ function aplicarFiltres() {
     
     actualitzarGraficos();
     actualitzarTaula();
+    updateSummaryTable(); // Actualitzar taula resumen amb els filtres aplicats
 }
 
 // ===== CHARTS =====
@@ -633,6 +655,9 @@ function handleActionClick(event) {
         case 'export-table':
             exportTable();
             break;
+        case 'export-summary':
+            exportSummary();
+            break;
     }
 }
 
@@ -643,6 +668,7 @@ function resetFiltres() {
     filteredData = [...currentData];
     actualitzarGraficos();
     actualitzarTaula();
+    updateSummaryTable(); // Resetar taula resumen
     showStatus('info', 'Filtres reiniciats');
 }
 
@@ -658,6 +684,7 @@ async function clearData() {
             filteredData = [];
             actualitzarGraficos();
             actualitzarTaula();
+            updateSummaryTable(); // Netejar taula resumen
             showStatus('success', 'Dades netejades correctament');
             
             // Amagar seccions
@@ -689,6 +716,57 @@ function exportTable() {
     const csv = convertToCSV(filteredData);
     downloadCSV(csv, 'taula_assoliments.csv');
     showStatus('success', 'Taula exportada correctament');
+}
+
+function exportSummary() {
+    if (filteredData.length === 0) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    // Calcular estadístiques per exportar
+    const totalAlumnes = new Set(filteredData.map(item => item.estudiant_nom)).size;
+    const totalAssoliments = filteredData.length;
+    const assolits = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const noAssolits = filteredData.filter(item => item.assoliment === 'NA').length;
+    const percentAssolits = totalAssoliments > 0 ? Math.round((assolits / totalAssoliments) * 100) : 0;
+    const percentNoAssolits = totalAssoliments > 0 ? Math.round((noAssolits / totalAssoliments) * 100) : 0;
+    
+    const ae = filteredData.filter(item => item.assoliment === 'AE').length;
+    const an = filteredData.filter(item => item.assoliment === 'AN').length;
+    const as = filteredData.filter(item => item.assoliment === 'AS').length;
+    const na = filteredData.filter(item => item.assoliment === 'NA').length;
+    
+    const percentAE = totalAssoliments > 0 ? Math.round((ae / totalAssoliments) * 100) : 0;
+    const percentAN = totalAssoliments > 0 ? Math.round((an / totalAssoliments) * 100) : 0;
+    const percentAS = totalAssoliments > 0 ? Math.round((as / totalAssoliments) * 100) : 0;
+    const percentNA = totalAssoliments > 0 ? Math.round((na / totalAssoliments) * 100) : 0;
+    
+    const mitjanaGeneral = totalAssoliments > 0 ? 
+        (filteredData.reduce((sum, item) => sum + item.valor_numeric, 0) / totalAssoliments).toFixed(2) : '0.00';
+    
+    // Crear CSV del resumen
+    const summaryData = [
+        ['Mètrica', 'Valor'],
+        ['Total Alumnes', totalAlumnes],
+        ['Total Assoliments', totalAssoliments],
+        ['Nº Assolits', assolits],
+        ['% Assolits', `${percentAssolits}%`],
+        ['Nº No Assolits', noAssolits],
+        ['% No Assolits', `${percentNoAssolits}%`],
+        ['Mitjana General', mitjanaGeneral],
+        ['AE (Excel·lent)', `${ae} (${percentAE}%)`],
+        ['AN (Notable)', `${an} (${percentAN}%)`],
+        ['AS (Assolit)', `${as} (${percentAS}%)`],
+        ['NA (No Assolit)', `${na} (${percentNA}%)`]
+    ];
+    
+    const csv = summaryData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    downloadCSV(csv, 'resum_assoliments.csv');
+    showStatus('success', 'Resum exportat correctament');
 }
 
 function convertToCSV(data) {
@@ -751,6 +829,94 @@ function handleFilterChange(event) {
         window.filterTimeout = setTimeout(() => {
             aplicarFiltres();
         }, 300);
+    }
+}
+
+// ===== PROGRESS BAR FUNCTIONS =====
+function showProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = progressBar.querySelector('.progress-fill');
+    const progressText = progressBar.querySelector('.progress-text');
+    
+    progressBar.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Carregant dades...';
+}
+
+function updateProgress(percentage, text) {
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+    
+    if (progressFill && progressText) {
+        progressFill.style.width = `${percentage}%`;
+        progressText.textContent = text || `Carregant... ${percentage}%`;
+    }
+}
+
+function hideProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.display = 'none';
+}
+
+// ===== SUMMARY TABLE FUNCTIONS =====
+function updateSummaryTable() {
+    const container = document.getElementById('summaryTableContainer');
+    const tbody = document.getElementById('summaryTableBody');
+    
+    if (!container || !tbody) return;
+    
+    // Calcular estadístiques
+    const totalAlumnes = new Set(filteredData.map(item => item.estudiant_nom)).size;
+    const totalAssoliments = filteredData.length;
+    const assolits = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const noAssolits = filteredData.filter(item => item.assoliment === 'NA').length;
+    const percentAssolits = totalAssoliments > 0 ? Math.round((assolits / totalAssoliments) * 100) : 0;
+    const percentNoAssolits = totalAssoliments > 0 ? Math.round((noAssolits / totalAssoliments) * 100) : 0;
+    
+    // Desglossament per tipus d'assoliment
+    const ae = filteredData.filter(item => item.assoliment === 'AE').length;
+    const an = filteredData.filter(item => item.assoliment === 'AN').length;
+    const as = filteredData.filter(item => item.assoliment === 'AS').length;
+    const na = filteredData.filter(item => item.assoliment === 'NA').length;
+    
+    const percentAE = totalAssoliments > 0 ? Math.round((ae / totalAssoliments) * 100) : 0;
+    const percentAN = totalAssoliments > 0 ? Math.round((an / totalAssoliments) * 100) : 0;
+    const percentAS = totalAssoliments > 0 ? Math.round((as / totalAssoliments) * 100) : 0;
+    const percentNA = totalAssoliments > 0 ? Math.round((na / totalAssoliments) * 100) : 0;
+    
+    // Mitjana general
+    const mitjanaGeneral = totalAssoliments > 0 ? 
+        (filteredData.reduce((sum, item) => sum + item.valor_numeric, 0) / totalAssoliments).toFixed(2) : '0.00';
+    
+    tbody.innerHTML = `
+        <tr><td>Total Alumnes</td><td>${totalAlumnes}</td></tr>
+        <tr><td>Total Assoliments</td><td>${totalAssoliments}</td></tr>
+        <tr><td>Nº Assolits</td><td>${assolits}</td></tr>
+        <tr><td>% Assolits</td><td>${percentAssolits}%</td></tr>
+        <tr><td>Nº No Assolits</td><td>${noAssolits}</td></tr>
+        <tr><td>% No Assolits</td><td>${percentNoAssolits}%</td></tr>
+        <tr><td>Mitjana General</td><td>${mitjanaGeneral}</td></tr>
+        <tr><td>AE (Excel·lent)</td><td>${ae} (${percentAE}%)</td></tr>
+        <tr><td>AN (Notable)</td><td>${an} (${percentAN}%)</td></tr>
+        <tr><td>AS (Assolit)</td><td>${as} (${percentAS}%)</td></tr>
+        <tr><td>NA (No Assolit)</td><td>${na} (${percentNA}%)</td></tr>
+    `;
+    
+    container.style.display = 'block';
+}
+
+// ===== NAVIGATION MARKER =====
+function showNavigationMarker() {
+    const marker = document.getElementById('navigationMarker');
+    if (marker) {
+        marker.style.display = 'block';
+    }
+}
+
+function hideNavigationMarker() {
+    const marker = document.getElementById('navigationMarker');
+    if (marker) {
+        marker.style.display = 'none';
     }
 }
 
