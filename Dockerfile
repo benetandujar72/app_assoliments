@@ -19,5 +19,13 @@ EXPOSE 3000
 # Variable d'entorn per al port
 ENV PORT=3000
 
-# Comandament per executar l'aplicació
-CMD ["npm", "start"] 
+# Crear script de inicialización
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "🔌 Verificant connexió a la base de dades..."' >> /app/start.sh && \
+    echo 'node -e "const { Pool } = require(\"pg\"); const pool = new Pool(); pool.query(\"SELECT 1\").then(() => { console.log(\"✅ Base de dades connectada\"); process.exit(0); }).catch(() => { console.log(\"⚠️  Base de dades no disponible, continuant...\"); process.exit(0); });"' >> /app/start.sh && \
+    echo 'echo "🚀 Iniciant aplicació..."' >> /app/start.sh && \
+    echo 'npm start' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Comandament per executar l'aplicació amb inicialització
+CMD ["/app/start.sh"] 

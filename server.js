@@ -10,6 +10,9 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config({ path: './config.env' });
 }
 
+// Importar script de inicialización de base de datos
+const { initDatabase } = require('./scripts/init-db.js');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -123,11 +126,23 @@ app.use('*', (req, res) => {
     });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor executant-se al port ${PORT}`);
-    console.log(`📊 Dashboard d'assoliments disponible a: http://localhost:${PORT}`);
-    console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
-});
+// Iniciar servidor amb inicialització de base de dades
+async function startServer() {
+    try {
+        // Inicializar base de datos antes de arrancar el servidor
+        await initDatabase();
+        
+        app.listen(PORT, () => {
+            console.log(`🚀 Servidor executant-se al port ${PORT}`);
+            console.log(`📊 Dashboard d'assoliments disponible a: http://localhost:${PORT}`);
+            console.log(`🔧 Mode: ${process.env.NODE_ENV}`);
+        });
+    } catch (error) {
+        console.error('❌ Error iniciant el servidor:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 module.exports = app; 
