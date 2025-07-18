@@ -23,15 +23,27 @@ app.use(helmet({
     }
 }));
 
-// Rate limiting
+// Rate limiting - Configuració per producció
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minuts
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // límit per IP
     message: {
         error: 'Massa peticions des d\'aquesta IP, si us plau torna-ho a provar més tard.'
+    },
+    // Configuració per producció amb proxy
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Deshabilitar X-Forwarded-For en producció per evitar errors
+    skip: (req) => {
+        // En producció, confiar en el proxy de Render
+        return process.env.NODE_ENV === 'production';
     }
 });
-app.use('/api/', limiter);
+
+// Aplicar rate limiting només en desenvolupament
+if (process.env.NODE_ENV === 'development') {
+    app.use('/api/', limiter);
+}
 
 // Middleware general
 app.use(compression());
@@ -58,13 +70,18 @@ app.get('/api/health', async (req, res) => {
             success: true,
             message: 'Servidor funcionant correctament',
             database: 'PostgreSQL',
-            timestamp: result.rows[0].current_time
+            timestamp: result.rows[0].current_time,
+            environment: process.env.NODE_ENV,
+            dbHost: process.env.DB_HOST
         });
     } catch (error) {
+        console.error('❌ Error en health check:', error.message);
         res.status(500).json({
             success: false,
             error: 'Error de connexió amb la base de dades',
-            message: error.message
+            message: error.message,
+            environment: process.env.NODE_ENV,
+            dbHost: process.env.DB_HOST
         });
     }
 });
