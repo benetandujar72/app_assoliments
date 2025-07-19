@@ -1234,17 +1234,64 @@ function showAnalysisTab(tabId) {
 
 function loadIndividualContent() {
     const content = document.getElementById('individualContent');
+    if (!content) return;
+    
     if (filteredData.length === 0) {
-        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        content.innerHTML = `
+            <div class="analysis-empty-state">
+                <div class="analysis-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <h3>No hi ha dades disponibles</h3>
+                <p>Carrega un fitxer CSV per veure els perfils individuals</p>
+            </div>
+        `;
         return;
     }
     
     // Get unique students for selection
     const students = [...new Set(filteredData.map(item => item.estudiant))].sort();
     
-    let html = '<div class="student-selection">';
-    html += '<h4>Selecciona un estudiant:</h4>';
-    html += '<div class="student-grid">';
+    // Calcular estadístiques generals
+    const totalGeneral = filteredData.length;
+    const assolitsGeneral = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const assolitsPercentGeneral = ((assolitsGeneral / totalGeneral) * 100).toFixed(1);
+    
+    let html = `
+        <div class="analysis-complete-container">
+            <!-- Header amb estadístiques generals -->
+            <div class="analysis-header-stats">
+                <div class="analysis-header-card">
+                    <div class="analysis-header-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-header-content">
+                        <h3>Perfils Individuals</h3>
+                        <div class="analysis-header-metrics">
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${students.length}</span>
+                                <span class="analysis-metric-label">Estudiants</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value success">${assolitsPercentGeneral}%</span>
+                                <span class="analysis-metric-label">% Mitjà Assolits</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${totalGeneral}</span>
+                                <span class="analysis-metric-label">Total Avaluacions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid d'estudiants -->
+            <div class="analysis-grid">
+    `;
     
     students.forEach(student => {
         const studentData = filteredData.filter(item => item.estudiant === student);
@@ -1252,16 +1299,106 @@ function loadIndividualContent() {
         const assolits = studentData.filter(item => item.assoliment !== 'NA').length;
         const achievementRate = ((assolits / totalAssessments) * 100).toFixed(1);
         
+        // Calcular colors segons el rendiment
+        const performanceColor = achievementRate >= 80 ? 'success' : achievementRate >= 60 ? 'warning' : 'error';
+        
+        // Calcular estadístiques detallades
+        const na = studentData.filter(item => item.assoliment === 'NA').length;
+        const as = studentData.filter(item => item.assoliment === 'AS').length;
+        const an = studentData.filter(item => item.assoliment === 'AN').length;
+        const ae = studentData.filter(item => item.assoliment === 'AE').length;
+        
+        const naPercent = ((na / totalAssessments) * 100).toFixed(1);
+        const asPercent = ((as / totalAssessments) * 100).toFixed(1);
+        const anPercent = ((an / totalAssessments) * 100).toFixed(1);
+        const aePercent = ((ae / totalAssessments) * 100).toFixed(1);
+        
         html += `
-            <div class="student-card" data-student="${student}">
-                <h5>${student}</h5>
-                <p>${totalAssessments} avaluacions</p>
-                <p class="achievement-rate">${achievementRate}% assolits</p>
+            <div class="analysis-subject-card student-card" data-student="${student}">
+                <div class="analysis-subject-header">
+                    <div class="analysis-subject-icon ${performanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-subject-info">
+                        <h4 class="analysis-subject-title">${student}</h4>
+                        <div class="analysis-subject-stats">
+                            <span class="analysis-subject-total">${totalAssessments} avaluacions</span>
+                            <span class="analysis-subject-percent ${performanceColor}">${achievementRate}% assolits</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analysis-subject-content">
+                    <div class="analysis-progress-overview">
+                        <div class="analysis-progress-bar">
+                            <div class="analysis-progress-fill ${performanceColor}" style="width: ${achievementRate}%"></div>
+                        </div>
+                        <div class="analysis-progress-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-stats-breakdown">
+                        <div class="analysis-stats-grid">
+                            <div class="analysis-stat-item na">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">No Assolit</span>
+                                    <span class="analysis-stat-value">${naPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${naPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${na} avaluacions</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item as">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Assolit</span>
+                                    <span class="analysis-stat-value">${asPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${asPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${as} avaluacions</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item an">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Notable</span>
+                                    <span class="analysis-stat-value">${anPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${anPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${an} avaluacions</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item ae">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Excel·lent</span>
+                                    <span class="analysis-stat-value">${aePercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${aePercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${ae} avaluacions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     });
     
-    html += '</div></div>';
+    html += `
+            </div>
+        </div>
+    `;
+    
     content.innerHTML = html;
     
     // Add click events to student cards
@@ -1277,48 +1414,127 @@ function showStudentProfile(student) {
     const content = document.getElementById('individualContent');
     const studentData = filteredData.filter(item => item.estudiant === student);
     
+    // Calcular estadístiques generals de l'estudiant
+    const totalAssessments = studentData.length;
+    const assolits = studentData.filter(item => item.assoliment !== 'NA').length;
+    const achievementRate = ((assolits / totalAssessments) * 100).toFixed(1);
+    const performanceColor = achievementRate >= 80 ? 'success' : achievementRate >= 60 ? 'warning' : 'error';
+    
+    // Calcular estadístiques per assignatura
+    const subjects = [...new Set(studentData.map(item => item.assignatura))];
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    
     let html = `
-        <div class="student-profile">
-            <div class="student-header">
-                <h4>${student}</h4>
-                <button class="btn btn-secondary btn-small" onclick="loadIndividualContent()">
-                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                    Tornar
-                </button>
-            </div>
-            <div class="student-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Total Avaluacions:</span>
-                    <span class="stat-value">${studentData.length}</span>
+        <div class="analysis-complete-container">
+            <!-- Header de l'estudiant -->
+            <div class="analysis-header-stats">
+                <div class="analysis-header-card">
+                    <div class="analysis-header-icon ${performanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-header-content">
+                        <div class="analysis-header-top">
+                            <h3>${student}</h3>
+                            <button class="btn btn-secondary btn-small" onclick="loadIndividualContent()">
+                                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                                Tornar
+                            </button>
+                        </div>
+                        <div class="analysis-header-metrics">
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${totalAssessments}</span>
+                                <span class="analysis-metric-label">Total Avaluacions</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value ${performanceColor}">${achievementRate}%</span>
+                                <span class="analysis-metric-label">% Assolits</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${subjects.length}</span>
+                                <span class="analysis-metric-label">Assignatures</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">% Assolits:</span>
-                    <span class="stat-value">${((studentData.filter(item => item.assoliment !== 'NA').length / studentData.length) * 100).toFixed(1)}%</span>
-                </div>
             </div>
-            <div class="student-subjects">
-                <h5>Rendiment per Assignatura:</h5>
-                <div class="subject-grid">
+            
+            <!-- Grid d'assignatures -->
+            <div class="analysis-grid">
     `;
     
-    const subjects = [...new Set(studentData.map(item => item.assignatura))];
     subjects.forEach(subject => {
         const subjectData = studentData.filter(item => item.assignatura === subject);
         const assolits = subjectData.filter(item => item.assoliment !== 'NA').length;
         const rate = ((assolits / subjectData.length) * 100).toFixed(1);
+        const subjectPerformanceColor = rate >= 80 ? 'success' : rate >= 60 ? 'warning' : 'error';
+        
+        // Calcular estadístiques per trimestre d'aquesta assignatura
+        let trimestresHTML = '';
+        trimestres.forEach(trimestre => {
+            const trimestreData = subjectData.filter(item => item.trimestre === trimestre);
+            if (trimestreData.length === 0) return;
+            
+            const trimestreAssoliment = trimestreData[0].assoliment;
+            const trimestreColor = trimestreAssoliment === 'NA' ? 'error' : 
+                                 trimestreAssoliment === 'AS' ? 'warning' : 
+                                 trimestreAssoliment === 'AN' ? 'primary' : 'success';
+            
+            trimestresHTML += `
+                <div class="analysis-trimester-item">
+                    <div class="analysis-trimester-header">
+                        <h5>${trimestre === '1r trim' ? '1r Trim' : trimestre === '2n trim' ? '2n Trim' : trimestre === '3r trim' ? '3r Trim' : 'Final'}</h5>
+                    </div>
+                    <div class="analysis-trimester-content">
+                        <div class="analysis-trimester-achievement ${trimestreColor}">
+                            <span class="analysis-trimester-achievement-label">${trimestreAssoliment}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
         
         html += `
-            <div class="subject-item">
-                <span class="subject-name">${subject}</span>
-                <span class="subject-rate">${rate}%</span>
+            <div class="analysis-subject-card">
+                <div class="analysis-subject-header">
+                    <div class="analysis-subject-icon ${subjectPerformanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-subject-info">
+                        <h4 class="analysis-subject-title">${subject}</h4>
+                        <div class="analysis-subject-stats">
+                            <span class="analysis-subject-total">${subjectData.length} avaluacions</span>
+                            <span class="analysis-subject-percent ${subjectPerformanceColor}">${rate}% assolits</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analysis-subject-content">
+                    <div class="analysis-progress-overview">
+                        <div class="analysis-progress-bar">
+                            <div class="analysis-progress-fill ${subjectPerformanceColor}" style="width: ${rate}%"></div>
+                        </div>
+                        <div class="analysis-progress-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-trimesters-grid">
+                        ${trimestresHTML}
+                    </div>
+                </div>
             </div>
         `;
     });
     
     html += `
-                </div>
             </div>
         </div>
     `;
@@ -2065,50 +2281,176 @@ function crearGraficRendiment() {
 
 // ===== STATISTICS FUNCTIONS =====
 function actualitzarEstadistiquesPerAssignatura() {
-    const table = document.getElementById('assignaturaStatsTable');
-    if (!table) return;
+    const content = document.getElementById('statistics');
+    if (!content) return;
     
     if (filteredData.length === 0) {
-        table.querySelector('tbody').innerHTML = '<tr><td colspan="4">No hi ha dades disponibles</td></tr>';
+        content.innerHTML = `
+            <div class="analysis-empty-state">
+                <div class="analysis-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <h3>No hi ha dades disponibles</h3>
+                <p>Carrega un fitxer CSV per veure les estadístiques</p>
+            </div>
+        `;
         return;
     }
     
     const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
-    let html = '';
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
     
+    // Calcular estadístiques generals
+    const totalGeneral = filteredData.length;
+    const assolitsGeneral = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const assolitsPercentGeneral = ((assolitsGeneral / totalGeneral) * 100).toFixed(1);
+    
+    // Crear HTML principal amb layout de múltiples columnes
+    let html = `
+        <div class="analysis-complete-container">
+            <!-- Header amb estadístiques generals -->
+            <div class="analysis-header-stats">
+                <div class="analysis-header-card">
+                    <div class="analysis-header-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-header-content">
+                        <h3>Estadístiques Detallades</h3>
+                        <div class="analysis-header-metrics">
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${totalGeneral}</span>
+                                <span class="analysis-metric-label">Total Avaluacions</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value success">${assolitsPercentGeneral}%</span>
+                                <span class="analysis-metric-label">% Assolits</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${assignatures.length}</span>
+                                <span class="analysis-metric-label">Assignatures</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid principal amb múltiples columnes -->
+            <div class="analysis-grid">
+    `;
+    
+    // Crear targetes per assignatura
     assignatures.forEach(assignatura => {
         const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
         const total = assignaturaData.length;
         const assolits = assignaturaData.filter(item => item.assoliment !== 'NA').length;
         const na = assignaturaData.filter(item => item.assoliment === 'NA').length;
+        const as = assignaturaData.filter(item => item.assoliment === 'AS').length;
+        const an = assignaturaData.filter(item => item.assoliment === 'AN').length;
+        const ae = assignaturaData.filter(item => item.assoliment === 'AE').length;
         
         const assolitsPercent = ((assolits / total) * 100).toFixed(1);
         const naPercent = ((na / total) * 100).toFixed(1);
+        const asPercent = ((as / total) * 100).toFixed(1);
+        const anPercent = ((an / total) * 100).toFixed(1);
+        const aePercent = ((ae / total) * 100).toFixed(1);
+        
+        // Calcular colors segons el rendiment
+        const performanceColor = assolitsPercent >= 80 ? 'success' : assolitsPercent >= 60 ? 'warning' : 'error';
         
         html += `
-            <tr>
-                <td>${assignatura}</td>
-                <td>${total}</td>
-                <td class="percentage ${assolitsPercent >= 70 ? 'high' : assolitsPercent >= 50 ? 'medium' : 'low'}">${assolitsPercent}%</td>
-                <td class="percentage ${naPercent <= 20 ? 'high' : naPercent <= 40 ? 'medium' : 'low'}">${naPercent}%</td>
-            </tr>
+            <div class="analysis-subject-card">
+                <div class="analysis-subject-header">
+                    <div class="analysis-subject-icon ${performanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-subject-info">
+                        <h4 class="analysis-subject-title">${assignatura}</h4>
+                        <div class="analysis-subject-stats">
+                            <span class="analysis-subject-total">${total} avaluacions</span>
+                            <span class="analysis-subject-percent ${performanceColor}">${assolitsPercent}% assolits</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analysis-subject-content">
+                    <div class="analysis-progress-overview">
+                        <div class="analysis-progress-bar">
+                            <div class="analysis-progress-fill ${performanceColor}" style="width: ${assolitsPercent}%"></div>
+                        </div>
+                        <div class="analysis-progress-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-stats-breakdown">
+                        <div class="analysis-stats-grid">
+                            <div class="analysis-stat-item na">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">No Assolit</span>
+                                    <span class="analysis-stat-value">${naPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${naPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${na} estudiants</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item as">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Assolit</span>
+                                    <span class="analysis-stat-value">${asPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${asPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${as} estudiants</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item an">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Notable</span>
+                                    <span class="analysis-stat-value">${anPercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${anPercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${an} estudiants</div>
+                            </div>
+                            
+                            <div class="analysis-stat-item ae">
+                                <div class="analysis-stat-header">
+                                    <span class="analysis-stat-label">Excel·lent</span>
+                                    <span class="analysis-stat-value">${aePercent}%</span>
+                                </div>
+                                <div class="analysis-stat-bar">
+                                    <div class="analysis-stat-fill" style="width: ${aePercent}%"></div>
+                                </div>
+                                <div class="analysis-stat-count">${ae} estudiants</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
     });
     
-    table.querySelector('tbody').innerHTML = html;
-}
-
-function actualitzarEstadistiquesPerTrimestre() {
-    const table = document.getElementById('trimestreStatsTable');
-    if (!table) return;
-    
-    if (filteredData.length === 0) {
-        table.querySelector('tbody').innerHTML = '<tr><td colspan="4">No hi ha dades disponibles</td></tr>';
-        return;
-    }
-    
-    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
-    let html = '';
+    // Afegir targetes per trimestre
+    html += `
+            </div>
+            
+            <!-- Secció de trimestres -->
+            <div class="analysis-trimesters-section">
+                <h3 class="analysis-section-title">Evolució per Trimestre</h3>
+                <div class="analysis-trimesters-grid-large">
+    `;
     
     trimestres.forEach(trimestre => {
         const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
@@ -2117,9 +2459,15 @@ function actualitzarEstadistiquesPerTrimestre() {
         const total = trimestreData.length;
         const assolits = trimestreData.filter(item => item.assoliment !== 'NA').length;
         const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+        const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+        const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+        const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
         
         const assolitsPercent = ((assolits / total) * 100).toFixed(1);
         const naPercent = ((na / total) * 100).toFixed(1);
+        const asPercent = ((as / total) * 100).toFixed(1);
+        const anPercent = ((an / total) * 100).toFixed(1);
+        const aePercent = ((ae / total) * 100).toFixed(1);
         
         const trimestreName = {
             '1r trim': '1r Trimestre',
@@ -2128,17 +2476,84 @@ function actualitzarEstadistiquesPerTrimestre() {
             'final': 'Final'
         }[trimestre];
         
+        const performanceColor = assolitsPercent >= 80 ? 'success' : assolitsPercent >= 60 ? 'warning' : 'error';
+        
         html += `
-            <tr>
-                <td>${trimestreName}</td>
-                <td>${total}</td>
-                <td class="percentage ${assolitsPercent >= 70 ? 'high' : assolitsPercent >= 50 ? 'medium' : 'low'}">${assolitsPercent}%</td>
-                <td class="percentage ${naPercent <= 20 ? 'high' : naPercent <= 40 ? 'medium' : 'low'}">${naPercent}%</td>
-            </tr>
+            <div class="analysis-trimester-card">
+                <div class="analysis-trimester-card-header">
+                    <div class="analysis-trimester-card-icon ${performanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-trimester-card-info">
+                        <h4 class="analysis-trimester-card-title">${trimestreName}</h4>
+                        <div class="analysis-trimester-card-stats">
+                            <span class="analysis-trimester-card-total">${total} avaluacions</span>
+                            <span class="analysis-trimester-card-percent ${performanceColor}">${assolitsPercent}% assolits</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analysis-trimester-card-content">
+                    <div class="analysis-trimester-stats-breakdown">
+                        <div class="analysis-trimester-stat-item na">
+                            <div class="analysis-trimester-stat-header">
+                                <span class="analysis-trimester-stat-label">NA</span>
+                                <span class="analysis-trimester-stat-value">${naPercent}%</span>
+                            </div>
+                            <div class="analysis-trimester-stat-bar">
+                                <div class="analysis-trimester-stat-fill" style="width: ${naPercent}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-trimester-stat-item as">
+                            <div class="analysis-trimester-stat-header">
+                                <span class="analysis-trimester-stat-label">AS</span>
+                                <span class="analysis-trimester-stat-value">${asPercent}%</span>
+                            </div>
+                            <div class="analysis-trimester-stat-bar">
+                                <div class="analysis-trimester-stat-fill" style="width: ${asPercent}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-trimester-stat-item an">
+                            <div class="analysis-trimester-stat-header">
+                                <span class="analysis-trimester-stat-label">AN</span>
+                                <span class="analysis-trimester-stat-value">${anPercent}%</span>
+                            </div>
+                            <div class="analysis-trimester-stat-bar">
+                                <div class="analysis-trimester-stat-fill" style="width: ${anPercent}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-trimester-stat-item ae">
+                            <div class="analysis-trimester-stat-header">
+                                <span class="analysis-trimester-stat-label">AE</span>
+                                <span class="analysis-trimester-stat-value">${aePercent}%</span>
+                            </div>
+                            <div class="analysis-trimester-stat-bar">
+                                <div class="analysis-trimester-stat-fill" style="width: ${aePercent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
     });
     
-    table.querySelector('tbody').innerHTML = html;
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+function actualitzarEstadistiquesPerTrimestre() {
+    // Aquesta funció ara està integrada dins actualitzarEstadistiquesPerAssignatura()
+    // per mantenir un disseny coherent
 }
 
 // ===== COMPARATIVE FUNCTIONS =====

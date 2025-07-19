@@ -1932,3 +1932,340 @@ p {
         gap: var(--space-md);
     }
 }
+
+/* ===== ESTILS ADICIONALS PER ESTADÍSTIQUES I INDIVIDUAL ===== */
+
+/* Estils per estadístiques detallades */
+.analysis-stats-breakdown {
+    margin-top: var(--space-lg);
+}
+
+.analysis-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.analysis-stat-item {
+    background: var(--neutral-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    border: 1px solid var(--neutral-200);
+}
+
+.analysis-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-stat-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.analysis-stat-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+.analysis-stat-bar {
+    height: 6px;
+    background: var(--neutral-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-stat-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-normal);
+}
+
+.analysis-stat-item.na .analysis-stat-fill {
+    background: var(--error-500);
+}
+
+.analysis-stat-item.as .analysis-stat-fill {
+    background: var(--warning-500);
+}
+
+.analysis-stat-item.an .analysis-stat-fill {
+    background: var(--primary-500);
+}
+
+.analysis-stat-item.ae .analysis-stat-fill {
+    background: var(--success-500);
+}
+
+.analysis-stat-count {
+    font-size: 0.75rem;
+    color: var(--neutral-600);
+    text-align: right;
+}
+
+/* Secció de trimestres */
+.analysis-trimesters-section {
+    margin-top: var(--space-2xl);
+}
+
+.analysis-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--neutral-900);
+    margin-bottom: var(--space-lg);
+    text-align: center;
+}
+
+.analysis-trimesters-grid-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+/* Targetes de trimestre */
+.analysis-trimester-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--neutral-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+}
+
+.analysis-trimester-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-300);
+}
+
+.analysis-trimester-card-header {
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
+    border-bottom: 1px solid var(--neutral-200);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.analysis-trimester-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.analysis-trimester-card-icon.success {
+    background: linear-gradient(135deg, var(--success-500), var(--success-600));
+}
+
+.analysis-trimester-card-icon.warning {
+    background: linear-gradient(135deg, var(--warning-500), var(--warning-600));
+}
+
+.analysis-trimester-card-icon.error {
+    background: linear-gradient(135deg, var(--error-500), var(--error-600));
+}
+
+.analysis-trimester-card-info {
+    flex: 1;
+}
+
+.analysis-trimester-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--neutral-900);
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-trimester-card-stats {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+}
+
+.analysis-trimester-card-total {
+    font-size: 0.875rem;
+    color: var(--neutral-600);
+    background: var(--neutral-100);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.analysis-trimester-card-percent {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.analysis-trimester-card-percent.success {
+    background: var(--success-50);
+    color: var(--success-600);
+}
+
+.analysis-trimester-card-percent.warning {
+    background: var(--warning-50);
+    color: var(--warning-600);
+}
+
+.analysis-trimester-card-percent.error {
+    background: var(--error-50);
+    color: var(--error-600);
+}
+
+.analysis-trimester-card-content {
+    padding: var(--space-lg);
+}
+
+.analysis-trimester-stats-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.analysis-trimester-stat-item {
+    background: var(--neutral-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    border: 1px solid var(--neutral-200);
+}
+
+.analysis-trimester-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-trimester-stat-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.analysis-trimester-stat-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+.analysis-trimester-stat-bar {
+    height: 6px;
+    background: var(--neutral-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.analysis-trimester-stat-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-normal);
+}
+
+.analysis-trimester-stat-item.na .analysis-trimester-stat-fill {
+    background: var(--error-500);
+}
+
+.analysis-trimester-stat-item.as .analysis-trimester-stat-fill {
+    background: var(--warning-500);
+}
+
+.analysis-trimester-stat-item.an .analysis-trimester-stat-fill {
+    background: var(--primary-500);
+}
+
+.analysis-trimester-stat-item.ae .analysis-trimester-stat-fill {
+    background: var(--success-500);
+}
+
+/* Estils per perfils individuals */
+.analysis-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.analysis-header-top h3 {
+    margin: 0;
+}
+
+.analysis-trimester-achievement {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.analysis-trimester-achievement.error {
+    background: var(--error-50);
+    color: var(--error-600);
+    border: 1px solid var(--error-200);
+}
+
+.analysis-trimester-achievement.warning {
+    background: var(--warning-50);
+    color: var(--warning-600);
+    border: 1px solid var(--warning-200);
+}
+
+.analysis-trimester-achievement.primary {
+    background: var(--primary-50);
+    color: var(--primary-600);
+    border: 1px solid var(--primary-200);
+}
+
+.analysis-trimester-achievement.success {
+    background: var(--success-50);
+    color: var(--success-600);
+    border: 1px solid var(--success-200);
+}
+
+.analysis-trimester-achievement-label {
+    font-weight: 700;
+}
+
+/* Responsive per les noves seccions */
+@media (max-width: 768px) {
+    .analysis-trimesters-grid-large {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+    
+    .analysis-header-top {
+        flex-direction: column;
+        gap: var(--space-md);
+        text-align: center;
+    }
+    
+    .analysis-trimester-card-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .analysis-trimester-card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+    
+    .analysis-trimester-card-stats {
+        justify-content: center;
+    }
+}
