@@ -1170,6 +1170,10 @@ function showAnalysisTab(tabId) {
         });
         allPanes.forEach(pane => {
             pane.classList.remove('active');
+            // Forçar ocultació
+            pane.style.display = 'none';
+            pane.style.opacity = '0';
+            pane.style.visibility = 'hidden';
         });
         
         // Add active class to selected tab and pane
@@ -1186,7 +1190,20 @@ function showAnalysisTab(tabId) {
             selectedTab.classList.add('active');
             selectedPane.classList.add('active');
             
+            // Forçar visualització
+            selectedPane.style.display = 'block';
+            selectedPane.style.opacity = '1';
+            selectedPane.style.visibility = 'visible';
+            
             console.log('✅ Classes active afegides');
+            console.log('✅ Estils forçats:', {
+                display: selectedPane.style.display,
+                opacity: selectedPane.style.opacity,
+                visibility: selectedPane.style.visibility
+            });
+            
+            // Forçar reflow
+            selectedPane.offsetHeight;
             
             // Load content if needed
             if (tabId === 'individual') {
@@ -1406,6 +1423,23 @@ function handleActionClick(event) {
                 }
             });
             break;
+        case 'get-stats':
+            obtenirEstadistiquesCompletes().then(stats => {
+                if (stats) {
+                    showStatus('success', `BD: ${stats.total_estudiants} estudiants, ${stats.total_assoliments} assoliments`);
+                } else {
+                    showStatus('error', 'Error obtenint estadístiques');
+                }
+            });
+            break;
+        case 'verify-tabs':
+            verificarPestanyesAnalisi();
+            showStatus('info', 'Verificant estat de les pestanyes...');
+            break;
+        case 'force-tabs':
+            forçarVisualitzacióPestanyes();
+            showStatus('info', 'Forçant visualització de pestanyes...');
+            break;
         case 'file-select':
             // Simular clic en l'input de fitxer
             const fileInput = document.getElementById('fileInput');
@@ -1511,6 +1545,9 @@ function showFullAnalysis() {
                 tabActive: isActive,
                 paneActive: isPaneActive
             });
+            
+            // Verificar pestanyes d'anàlisi
+            verificarPestanyesAnalisi();
             
             if (isActive && isPaneActive) {
                 console.log('✅ Pestanya comparatives activada correctament');
@@ -3017,6 +3054,94 @@ async function obtenirEstadistiquesCompletes() {
         console.error('❌ Error connexió:', error);
         return null;
     }
+}
+
+// Funció per verificar l'estat de les pestanyes d'anàlisi
+function verificarPestanyesAnalisi() {
+    console.log('🔍 Verificant estat de les pestanyes d\'anàlisi...');
+    
+    const pestanyes = document.querySelectorAll('.analysis-tab');
+    const panes = document.querySelectorAll('.analysis-pane');
+    
+    console.log('📋 Pestanyes trobades:', pestanyes.length);
+    console.log('📋 Panes trobades:', panes.length);
+    
+    pestanyes.forEach((pestanya, index) => {
+        const isActive = pestanya.classList.contains('active');
+        const tabId = pestanya.dataset.tab;
+        console.log(`📋 Pestanya ${index + 1}:`, {
+            tabId: tabId,
+            isActive: isActive,
+            text: pestanya.textContent.trim()
+        });
+    });
+    
+    panes.forEach((pane, index) => {
+        const isActive = pane.classList.contains('active');
+        const computedStyle = window.getComputedStyle(pane);
+        console.log(`📋 Pane ${index + 1}:`, {
+            id: pane.id,
+            isActive: isActive,
+            display: computedStyle.display,
+            opacity: computedStyle.opacity,
+            visibility: computedStyle.visibility,
+            height: computedStyle.height,
+            width: computedStyle.width
+        });
+    });
+    
+    // Verificar si hi ha algun pane visible
+    const panesVisibles = Array.from(panes).filter(pane => {
+        const computedStyle = window.getComputedStyle(pane);
+        return computedStyle.display !== 'none' && 
+               computedStyle.opacity !== '0' && 
+               computedStyle.visibility !== 'hidden';
+    });
+    
+    console.log('🔍 Panes visibles:', panesVisibles.length);
+    if (panesVisibles.length === 0) {
+        console.warn('⚠️ Cap pane d\'anàlisi és visible!');
+    }
+    
+    return {
+        pestanyes: pestanyes.length,
+        panes: panes.length,
+        panesVisibles: panesVisibles.length
+    };
+}
+
+// Funció per forçar la visualització de totes les pestanyes d'anàlisi
+function forçarVisualitzacióPestanyes() {
+    console.log('🔧 Forçant visualització de totes les pestanyes d\'anàlisi...');
+    
+    const panes = document.querySelectorAll('.analysis-pane');
+    
+    panes.forEach((pane, index) => {
+        const isActive = pane.classList.contains('active');
+        
+        if (isActive) {
+            // Forçar visualització per panes actius
+            pane.style.display = 'block';
+            pane.style.opacity = '1';
+            pane.style.visibility = 'visible';
+            pane.style.height = 'auto';
+            pane.style.overflow = 'visible';
+            
+            console.log(`✅ Pane ${pane.id} forçat a mostrar`);
+        } else {
+            // Ocultar panes inactius
+            pane.style.display = 'none';
+            pane.style.opacity = '0';
+            pane.style.visibility = 'hidden';
+            
+            console.log(`❌ Pane ${pane.id} ocult`);
+        }
+    });
+    
+    // Verificar resultat
+    setTimeout(() => {
+        verificarPestanyesAnalisi();
+    }, 100);
 }
 
  
