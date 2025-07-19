@@ -1536,29 +1536,11 @@ function showFullAnalysis() {
     showStatus('info', 'Obrint anàlisi complet...');
     
     try {
-        // Verificar que els elements existeixen
-        const comparativesTab = document.querySelector('[data-tab="comparatives"]');
-        const comparativesPane = document.getElementById('comparatives');
-        
-        console.log('🔍 Elements trobats:', {
-            comparativesTab: !!comparativesTab,
-            comparativesPane: !!comparativesPane
-        });
-        
-        if (!comparativesTab || !comparativesPane) {
-            console.error('❌ Elements de comparatives no trobats');
-            showStatus('error', 'Error: Elements d\'anàlisi no trobats');
-            return;
-        }
-        
-        // Verificar que tenim dades
+        // 1. Verificar que tenim dades
         console.log('📊 Dades disponibles:', {
             currentData: currentData.length,
             filteredData: filteredData.length
         });
-        
-        // Verificar dades detallades
-        verificarDadesDetallades();
         
         if (filteredData.length === 0) {
             console.warn('⚠️ No hi ha dades per mostrar anàlisi');
@@ -1566,11 +1548,30 @@ function showFullAnalysis() {
             return;
         }
         
-        // Navigate to comparative tab
-        console.log('📑 Canviant a pestanya comparatives...');
+        // 2. Forçar visualització completa de la secció d'anàlisi
+        console.log('🔧 Forçant visualització completa de la secció d\'anàlisi...');
+        verificarIVisualitzarAnalisiComplet();
+        
+        // 3. Verificar que els elements existeixen després de forçar la visualització
+        const comparativesTab = document.querySelector('[data-tab="comparatives"]');
+        const comparativesPane = document.getElementById('comparatives');
+        
+        console.log('🔍 Elements trobats després de forçar visualització:', {
+            comparativesTab: !!comparativesTab,
+            comparativesPane: !!comparativesPane
+        });
+        
+        if (!comparativesTab || !comparativesPane) {
+            console.error('❌ Elements de comparatives no trobats després de forçar visualització');
+            showStatus('error', 'Error: Elements d\'anàlisi no trobats');
+            return;
+        }
+        
+        // 4. Activar la pestanya comparatives
+        console.log('📑 Activant pestanya comparatives...');
         showAnalysisTab('comparatives');
         
-        // Verificar que el canvi s'ha fet
+        // 5. Verificar que el canvi s'ha fet
         setTimeout(() => {
             const isActive = comparativesTab.classList.contains('active');
             const isPaneActive = comparativesPane.classList.contains('active');
@@ -1580,17 +1581,18 @@ function showFullAnalysis() {
                 paneActive: isPaneActive
             });
             
-            // Verificar pestanyes d'anàlisi
-            verificarPestanyesAnalisi();
-            
             if (isActive && isPaneActive) {
                 console.log('✅ Pestanya comparatives activada correctament');
-                showStatus('success', 'Anàlisi complet obert');
+                showStatus('success', 'Anàlisi complet obert correctament');
+                
+                // 6. Actualitzar dades de la pestanya comparatives
+                actualitzarComparativaAvancada();
+                
             } else {
                 console.error('❌ Pestanya comparatives no s\'ha activat');
                 showStatus('error', 'Error activant anàlisi complet');
             }
-        }, 100);
+        }, 200);
         
     } catch (error) {
         console.error('❌ Error en showFullAnalysis:', error);
