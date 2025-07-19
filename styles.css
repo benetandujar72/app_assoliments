@@ -1473,3 +1473,462 @@ p {
     background: var(--primary-100);
     transform: translateY(1px);
 }
+
+/* ===== ANÀLISI COMPLET - NOU DISSENY VISUAL ===== */
+
+/* Container principal */
+.analysis-complete-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+/* Header amb estadístiques generals */
+.analysis-header-stats {
+    margin-bottom: var(--space-2xl);
+}
+
+.analysis-header-card {
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+    border: 1px solid var(--primary-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.analysis-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.analysis-header-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+}
+
+.analysis-header-content h3 {
+    margin-bottom: var(--space-md);
+    color: var(--neutral-900);
+    font-size: 1.5rem;
+}
+
+.analysis-header-metrics {
+    display: flex;
+    gap: var(--space-xl);
+    flex-wrap: wrap;
+}
+
+.analysis-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.analysis-metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    line-height: 1;
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-metric-value.success {
+    color: var(--success-600);
+}
+
+.analysis-metric-label {
+    font-size: 0.875rem;
+    color: var(--neutral-600);
+    font-weight: 500;
+}
+
+/* Grid principal */
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: var(--space-xl);
+    margin-top: var(--space-xl);
+}
+
+/* Targetes d'assignatura */
+.analysis-subject-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--neutral-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+.analysis-subject-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-300);
+}
+
+.analysis-subject-header {
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
+    border-bottom: 1px solid var(--neutral-200);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.analysis-subject-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.analysis-subject-icon.success {
+    background: linear-gradient(135deg, var(--success-500), var(--success-600));
+}
+
+.analysis-subject-icon.warning {
+    background: linear-gradient(135deg, var(--warning-500), var(--warning-600));
+}
+
+.analysis-subject-icon.error {
+    background: linear-gradient(135deg, var(--error-500), var(--error-600));
+}
+
+.analysis-subject-info {
+    flex: 1;
+}
+
+.analysis-subject-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--neutral-900);
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-subject-stats {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+}
+
+.analysis-subject-total {
+    font-size: 0.875rem;
+    color: var(--neutral-600);
+    background: var(--neutral-100);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.analysis-subject-percent {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.analysis-subject-percent.success {
+    background: var(--success-50);
+    color: var(--success-600);
+}
+
+.analysis-subject-percent.warning {
+    background: var(--warning-50);
+    color: var(--warning-600);
+}
+
+.analysis-subject-percent.error {
+    background: var(--error-50);
+    color: var(--error-600);
+}
+
+/* Contingut de l'assignatura */
+.analysis-subject-content {
+    padding: var(--space-lg);
+}
+
+/* Barra de progrés general */
+.analysis-progress-overview {
+    margin-bottom: var(--space-lg);
+}
+
+.analysis-progress-bar {
+    height: 8px;
+    background: var(--neutral-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: var(--space-xs);
+}
+
+.analysis-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-normal);
+}
+
+.analysis-progress-fill.success {
+    background: linear-gradient(90deg, var(--success-500), var(--success-600));
+}
+
+.analysis-progress-fill.warning {
+    background: linear-gradient(90deg, var(--warning-500), var(--warning-600));
+}
+
+.analysis-progress-fill.error {
+    background: linear-gradient(90deg, var(--error-500), var(--error-600));
+}
+
+.analysis-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+}
+
+/* Grid de trimestres */
+.analysis-trimesters-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+/* Elements de trimestre */
+.analysis-trimester-item {
+    background: var(--neutral-50);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--neutral-200);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+}
+
+.analysis-trimester-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-300);
+}
+
+.analysis-trimester-item.empty {
+    opacity: 0.6;
+}
+
+.analysis-trimester-header {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--neutral-100);
+    border-bottom: 1px solid var(--neutral-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.analysis-trimester-header h5 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin: 0;
+}
+
+.analysis-trimester-count {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    background: var(--neutral-200);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.analysis-trimester-content {
+    padding: var(--space-md);
+}
+
+/* Barres d'assoliment */
+.analysis-achievement-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.analysis-achievement-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.analysis-achievement-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--neutral-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.analysis-achievement-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-normal);
+}
+
+.analysis-achievement-item.na .analysis-achievement-fill {
+    background: var(--error-500);
+}
+
+.analysis-achievement-item.as .analysis-achievement-fill {
+    background: var(--warning-500);
+}
+
+.analysis-achievement-item.an .analysis-achievement-fill {
+    background: var(--primary-500);
+}
+
+.analysis-achievement-item.ae .analysis-achievement-fill {
+    background: var(--success-500);
+}
+
+.analysis-achievement-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-width: 60px;
+}
+
+.analysis-achievement-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.analysis-achievement-value {
+    font-size: 0.75rem;
+    color: var(--neutral-600);
+    font-weight: 500;
+}
+
+/* Resum del trimestre */
+.analysis-trimester-summary {
+    text-align: center;
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--neutral-200);
+}
+
+.analysis-trimester-percent {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+
+.analysis-trimester-percent.success {
+    background: var(--success-50);
+    color: var(--success-600);
+}
+
+.analysis-trimester-percent.warning {
+    background: var(--warning-50);
+    color: var(--warning-600);
+}
+
+.analysis-trimester-percent.error {
+    background: var(--error-50);
+    color: var(--error-600);
+}
+
+/* Estat buit */
+.analysis-empty-state {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--neutral-500);
+}
+
+.analysis-empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--space-lg);
+    color: var(--neutral-400);
+}
+
+.analysis-empty-state h3 {
+    margin-bottom: var(--space-md);
+    color: var(--neutral-600);
+}
+
+.analysis-no-data {
+    text-align: center;
+    color: var(--neutral-500);
+    font-size: 0.875rem;
+    padding: var(--space-lg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .analysis-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+    
+    .analysis-header-metrics {
+        gap: var(--space-lg);
+    }
+    
+    .analysis-trimesters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-subject-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .analysis-complete-container {
+        padding: var(--space-md);
+    }
+    
+    .analysis-header-card {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+    
+    .analysis-header-metrics {
+        justify-content: center;
+    }
+    
+    .analysis-subject-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+}

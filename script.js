@@ -2174,34 +2174,117 @@ function actualitzarComparativaAvancada() {
     if (!content) return;
     
     if (filteredData.length === 0) {
-        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        content.innerHTML = `
+            <div class="analysis-empty-state">
+                <div class="analysis-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <h3>No hi ha dades disponibles</h3>
+                <p>Carrega un fitxer CSV per veure l'anàlisi complet</p>
+            </div>
+        `;
         return;
     }
     
     const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
     const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
     
-    let assignaturesHTML = '';
+    // Calcular estadístiques generals
+    const totalGeneral = filteredData.length;
+    const assolitsGeneral = filteredData.filter(item => item.assoliment !== 'NA').length;
+    const assolitsPercentGeneral = ((assolitsGeneral / totalGeneral) * 100).toFixed(1);
     
-    assignatures.forEach(assignatura => {
+    // Crear HTML principal amb layout de múltiples columnes
+    let html = `
+        <div class="analysis-complete-container">
+            <!-- Header amb estadístiques generals -->
+            <div class="analysis-header-stats">
+                <div class="analysis-header-card">
+                    <div class="analysis-header-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-header-content">
+                        <h3>Resum General</h3>
+                        <div class="analysis-header-metrics">
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${totalGeneral}</span>
+                                <span class="analysis-metric-label">Total Avaluacions</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value success">${assolitsPercentGeneral}%</span>
+                                <span class="analysis-metric-label">% Assolits</span>
+                            </div>
+                            <div class="analysis-metric">
+                                <span class="analysis-metric-value">${assignatures.length}</span>
+                                <span class="analysis-metric-label">Assignatures</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid principal amb múltiples columnes -->
+            <div class="analysis-grid">
+    `;
+    
+    // Crear columnes per assignatura
+    assignatures.forEach((assignatura, index) => {
         const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
         const totalAssignatura = assignaturaData.length;
         const assolitsAssignatura = assignaturaData.filter(item => item.assoliment !== 'NA').length;
         const assolitsPercent = ((assolitsAssignatura / totalAssignatura) * 100).toFixed(1);
         
-        let trimestresHTML = '';
+        // Calcular colors segons el rendiment
+        const performanceColor = assolitsPercent >= 80 ? 'success' : assolitsPercent >= 60 ? 'warning' : 'error';
         
+        html += `
+            <div class="analysis-subject-card">
+                <div class="analysis-subject-header">
+                    <div class="analysis-subject-icon ${performanceColor}">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="analysis-subject-info">
+                        <h4 class="analysis-subject-title">${assignatura}</h4>
+                        <div class="analysis-subject-stats">
+                            <span class="analysis-subject-total">${totalAssignatura} avaluacions</span>
+                            <span class="analysis-subject-percent ${performanceColor}">${assolitsPercent}% assolits</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analysis-subject-content">
+                    <div class="analysis-progress-overview">
+                        <div class="analysis-progress-bar">
+                            <div class="analysis-progress-fill ${performanceColor}" style="width: ${assolitsPercent}%"></div>
+                        </div>
+                        <div class="analysis-progress-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-trimesters-grid">
+        `;
+        
+        // Afegir dades per trimestre
         trimestres.forEach(trimestre => {
             const trimestreData = assignaturaData.filter(item => item.trimestre === trimestre);
             if (trimestreData.length === 0) {
-                trimestresHTML += `
-                    <div class="comparativa-avancada-trimestre">
-                        <div class="comparativa-avancada-trimestre-header">
-                            <h5 class="comparativa-avancada-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
-                            <span class="comparativa-avancada-trimestre-total">0 avaluacions</span>
+                html += `
+                    <div class="analysis-trimester-item empty">
+                        <div class="analysis-trimester-header">
+                            <h5>${trimestre === '1r trim' ? '1r Trim' : trimestre === '2n trim' ? '2n Trim' : trimestre === '3r trim' ? '3r Trim' : 'Final'}</h5>
+                            <span class="analysis-trimester-count">0</span>
                         </div>
-                        <div class="comparativa-avancada-progress-bars">
-                            <div class="text-center" style="color: var(--neutral-500); padding: var(--space-lg);">No hi ha dades</div>
+                        <div class="analysis-trimester-content">
+                            <div class="analysis-no-data">No hi ha dades</div>
                         </div>
                     </div>
                 `;
@@ -2218,75 +2301,76 @@ function actualitzarComparativaAvancada() {
             const asPercent = ((as / total) * 100).toFixed(1);
             const anPercent = ((an / total) * 100).toFixed(1);
             const aePercent = ((ae / total) * 100).toFixed(1);
+            const assolitsPercentTrim = (((as + an + ae) / total) * 100).toFixed(1);
             
-            trimestresHTML += `
-                <div class="comparativa-avancada-trimestre">
-                    <div class="comparativa-avancada-trimestre-header">
-                        <h5 class="comparativa-avancada-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
-                        <span class="comparativa-avancada-trimestre-total">${total} avaluacions</span>
+            html += `
+                <div class="analysis-trimester-item">
+                    <div class="analysis-trimester-header">
+                        <h5>${trimestre === '1r trim' ? '1r Trim' : trimestre === '2n trim' ? '2n Trim' : trimestre === '3r trim' ? '3r Trim' : 'Final'}</h5>
+                        <span class="analysis-trimester-count">${total}</span>
                     </div>
-                    <div class="comparativa-avancada-progress-bars">
-                        <div class="comparativa-avancada-progress-item">
-                            <span class="comparativa-avancada-progress-label">NA</span>
-                            <div class="comparativa-avancada-progress-bar">
-                                <div class="comparativa-avancada-progress-fill na" style="width: ${naPercent}%"></div>
+                    <div class="analysis-trimester-content">
+                        <div class="analysis-achievement-bars">
+                            <div class="analysis-achievement-item na">
+                                <div class="analysis-achievement-bar">
+                                    <div class="analysis-achievement-fill" style="width: ${naPercent}%"></div>
+                                </div>
+                                <div class="analysis-achievement-info">
+                                    <span class="analysis-achievement-label">NA</span>
+                                    <span class="analysis-achievement-value">${naPercent}%</span>
+                                </div>
                             </div>
-                            <span class="comparativa-avancada-progress-value">${naPercent}%</span>
+                            <div class="analysis-achievement-item as">
+                                <div class="analysis-achievement-bar">
+                                    <div class="analysis-achievement-fill" style="width: ${asPercent}%"></div>
+                                </div>
+                                <div class="analysis-achievement-info">
+                                    <span class="analysis-achievement-label">AS</span>
+                                    <span class="analysis-achievement-value">${asPercent}%</span>
+                                </div>
+                            </div>
+                            <div class="analysis-achievement-item an">
+                                <div class="analysis-achievement-bar">
+                                    <div class="analysis-achievement-fill" style="width: ${anPercent}%"></div>
+                                </div>
+                                <div class="analysis-achievement-info">
+                                    <span class="analysis-achievement-label">AN</span>
+                                    <span class="analysis-achievement-value">${anPercent}%</span>
+                                </div>
+                            </div>
+                            <div class="analysis-achievement-item ae">
+                                <div class="analysis-achievement-bar">
+                                    <div class="analysis-achievement-fill" style="width: ${aePercent}%"></div>
+                                </div>
+                                <div class="analysis-achievement-info">
+                                    <span class="analysis-achievement-label">AE</span>
+                                    <span class="analysis-achievement-value">${aePercent}%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="comparativa-avancada-progress-item">
-                            <span class="comparativa-avancada-progress-label">AS</span>
-                            <div class="comparativa-avancada-progress-bar">
-                                <div class="comparativa-avancada-progress-fill as" style="width: ${asPercent}%"></div>
-                            </div>
-                            <span class="comparativa-avancada-progress-value">${asPercent}%</span>
-                        </div>
-                        <div class="comparativa-avancada-progress-item">
-                            <span class="comparativa-avancada-progress-label">AN</span>
-                            <div class="comparativa-avancada-progress-bar">
-                                <div class="comparativa-avancada-progress-fill an" style="width: ${anPercent}%"></div>
-                            </div>
-                            <span class="comparativa-avancada-progress-value">${anPercent}%</span>
-                        </div>
-                        <div class="comparativa-avancada-progress-item">
-                            <span class="comparativa-avancada-progress-label">AE</span>
-                            <div class="comparativa-avancada-progress-bar">
-                                <div class="comparativa-avancada-progress-fill ae" style="width: ${aePercent}%"></div>
-                            </div>
-                            <span class="comparativa-avancada-progress-value">${aePercent}%</span>
+                        <div class="analysis-trimester-summary">
+                            <span class="analysis-trimester-percent ${assolitsPercentTrim >= 70 ? 'success' : assolitsPercentTrim >= 50 ? 'warning' : 'error'}">
+                                ${assolitsPercentTrim}% assolits
+                            </span>
                         </div>
                     </div>
                 </div>
             `;
         });
         
-        assignaturesHTML += `
-            <div class="comparativa-avancada-materia">
-                <div class="comparativa-avancada-materia-header">
-                    <h4 class="comparativa-avancada-materia-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        ${assignatura}
-                    </h4>
-                    <div class="comparativa-avancada-materia-stats">
-                        <div class="comparativa-avancada-stat">
-                            <span class="comparativa-avancada-stat-label">Total:</span>
-                            <span class="comparativa-avancada-stat-value">${totalAssignatura}</span>
-                        </div>
-                        <div class="comparativa-avancada-stat">
-                            <span class="comparativa-avancada-stat-label">% Assolits:</span>
-                            <span class="comparativa-avancada-stat-value">${assolitsPercent}%</span>
-                        </div>
+        html += `
                     </div>
-                </div>
-                <div class="comparativa-avancada-trimestres">
-                    ${trimestresHTML}
                 </div>
             </div>
         `;
     });
     
-    content.innerHTML = assignaturesHTML;
+    html += `
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
 }
 
 function actualitzarTaulaComparativaDetallada() {
