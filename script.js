@@ -279,6 +279,7 @@ function inicialitzarDashboard() {
     // Mostrar seccions
     document.getElementById('filtersSection').style.display = 'block';
     document.getElementById('statsSection').style.display = 'block';
+    document.getElementById('comparativaAvancadaSection').style.display = 'block';
     document.getElementById('tabsSection').style.display = 'block';
     
     // Omplir filtres
@@ -292,6 +293,9 @@ function inicialitzarDashboard() {
     
     // Actualitzar estadístiques detallades
     actualitzarEstadistiquesDetallades();
+    
+    // Actualitzar comparativa avançada
+    actualitzarComparativaAvancada();
     
     // Actualitzar gràfics
     actualitzarGraficos();
@@ -391,6 +395,7 @@ function aplicarFiltres() {
     actualitzarTaula();
     updateSummaryTable(); // Actualitzar taula resumen amb els filtres aplicats
     actualitzarEstadistiquesDetallades(); // Actualitzar estadístiques detallades
+    actualitzarComparativaAvancada(); // Actualitzar comparativa avançada
 }
 
 // ===== ESTADÍSTIQUES DETALLADES =====
@@ -1604,6 +1609,12 @@ function inicialitzarComparatives() {
         exportButton.addEventListener('click', exportComparativaDetallada);
     }
     
+    // Event listeners per comparativa avançada
+    const exportAvancadaButton = document.getElementById('exportComparativaAvancada');
+    if (exportAvancadaButton) {
+        exportAvancadaButton.addEventListener('click', exportComparativaAvancada);
+    }
+    
     // Carregar opcions dels filtres de comparatives
     carregarOpcionsComparatives();
 }
@@ -2566,6 +2577,228 @@ function actualitzarVistaAgrupada(resultats) {
     content.innerHTML = assignaturesHTML;
 }
 
+// Actualitzar comparativa avançada
+function actualitzarComparativaAvancada() {
+    const content = document.getElementById('comparativaAvancadaContent');
+    if (!content) return;
+    
+    if (filteredData.length === 0) {
+        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        return;
+    }
+    
+    // Agrupar per assignatura i trimestre
+    const grups = {};
+    filteredData.forEach(item => {
+        const key = `${item.assignatura_nom}|${item.trimestre}`;
+        if (!grups[key]) {
+            grups[key] = {
+                assignatura: item.assignatura_nom,
+                trimestre: item.trimestre,
+                total: 0,
+                na: 0,
+                as: 0,
+                an: 0,
+                ae: 0
+            };
+        }
+        grups[key].total++;
+        
+        switch (item.assoliment) {
+            case 'NA': grups[key].na++; break;
+            case 'AS': grups[key].as++; break;
+            case 'AN': grups[key].an++; break;
+            case 'AE': grups[key].ae++; break;
+        }
+    });
+    
+    // Calcular percentatges
+    const resultats = Object.values(grups).map(grup => ({
+        ...grup,
+        percentNA: grup.total > 0 ? Math.round((grup.na / grup.total) * 100) : 0,
+        percentAS: grup.total > 0 ? Math.round((grup.as / grup.total) * 100) : 0,
+        percentAN: grup.total > 0 ? Math.round((grup.an / grup.total) * 100) : 0,
+        percentAE: grup.total > 0 ? Math.round((grup.ae / grup.total) * 100) : 0,
+        percentAssolits: grup.total > 0 ? Math.round(((grup.as + grup.an + grup.ae) / grup.total) * 100) : 0
+    }));
+    
+    // Agrupar per assignatura
+    const assignatures = {};
+    resultats.forEach(item => {
+        if (!assignatures[item.assignatura]) {
+            assignatures[item.assignatura] = [];
+        }
+        assignatures[item.assignatura].push(item);
+    });
+    
+    // Generar HTML per cada assignatura
+    const assignaturesHTML = Object.entries(assignatures).map(([assignatura, items]) => {
+        // Calcular estadístiques totals de l'assignatura
+        const totalStats = {
+            total: items.reduce((sum, item) => sum + item.total, 0),
+            na: items.reduce((sum, item) => sum + item.na, 0),
+            as: items.reduce((sum, item) => sum + item.as, 0),
+            an: items.reduce((sum, item) => sum + item.an, 0),
+            ae: items.reduce((sum, item) => sum + item.ae, 0)
+        };
+        
+        totalStats.percentNA = totalStats.total > 0 ? Math.round((totalStats.na / totalStats.total) * 100) : 0;
+        totalStats.percentAS = totalStats.total > 0 ? Math.round((totalStats.as / totalStats.total) * 100) : 0;
+        totalStats.percentAN = totalStats.total > 0 ? Math.round((totalStats.an / totalStats.total) * 100) : 0;
+        totalStats.percentAE = totalStats.total > 0 ? Math.round((totalStats.ae / totalStats.total) * 100) : 0;
+        totalStats.percentAssolits = totalStats.total > 0 ? Math.round(((totalStats.as + totalStats.an + totalStats.ae) / totalStats.total) * 100) : 0;
+        
+        // Crear mapa de trimestres per accés ràpid
+        const trimestresMap = {};
+        items.forEach(item => {
+            trimestresMap[item.trimestre] = item;
+        });
+        
+        // Definir ordre dels trimestres
+        const trimestresOrder = ['1r trim', '2n trim', '3r trim', 'final'];
+        
+        // Generar HTML dels trimestres
+        const trimestresHTML = trimestresOrder.map(trimestre => {
+            const item = trimestresMap[trimestre];
+            if (!item) {
+                return `
+                    <div class="comparativa-avancada-trimestre">
+                        <div class="comparativa-avancada-trimestre-header">
+                            <div class="comparativa-avancada-trimestre-title">${trimestre}</div>
+                            <div class="comparativa-avancada-trimestre-total">0 estudiants</div>
+                        </div>
+                        <div class="comparativa-avancada-progress-bars">
+                            <div class="comparativa-avancada-progress-item">
+                                <div class="comparativa-avancada-progress-label">
+                                    <span>NA</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="comparativa-avancada-progress-bar">
+                                    <div class="comparativa-avancada-progress-fill na" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="comparativa-avancada-progress-item">
+                                <div class="comparativa-avancada-progress-label">
+                                    <span>AS</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="comparativa-avancada-progress-bar">
+                                    <div class="comparativa-avancada-progress-fill as" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="comparativa-avancada-progress-item">
+                                <div class="comparativa-avancada-progress-label">
+                                    <span>AN</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="comparativa-avancada-progress-bar">
+                                    <div class="comparativa-avancada-progress-fill an" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="comparativa-avancada-progress-item">
+                                <div class="comparativa-avancada-progress-label">
+                                    <span>AE</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="comparativa-avancada-progress-bar">
+                                    <div class="comparativa-avancada-progress-fill ae" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comparativa-avancada-summary">
+                            <div class="comparativa-avancada-summary-value">0%</div>
+                            <div class="comparativa-avancada-summary-label">Assolits</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="comparativa-avancada-trimestre">
+                    <div class="comparativa-avancada-trimestre-header">
+                        <div class="comparativa-avancada-trimestre-title">${item.trimestre}</div>
+                        <div class="comparativa-avancada-trimestre-total">${item.total} estudiants</div>
+                    </div>
+                    <div class="comparativa-avancada-progress-bars">
+                        <div class="comparativa-avancada-progress-item">
+                            <div class="comparativa-avancada-progress-label">
+                                <span>NA</span>
+                                <span>${item.percentNA}%</span>
+                            </div>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill na" style="width: ${item.percentNA}%"></div>
+                            </div>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <div class="comparativa-avancada-progress-label">
+                                <span>AS</span>
+                                <span>${item.percentAS}%</span>
+                            </div>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill as" style="width: ${item.percentAS}%"></div>
+                            </div>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <div class="comparativa-avancada-progress-label">
+                                <span>AN</span>
+                                <span>${item.percentAN}%</span>
+                            </div>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill an" style="width: ${item.percentAN}%"></div>
+                            </div>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <div class="comparativa-avancada-progress-label">
+                                <span>AE</span>
+                                <span>${item.percentAE}%</span>
+                            </div>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill ae" style="width: ${item.percentAE}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparativa-avancada-summary">
+                        <div class="comparativa-avancada-summary-value">${item.percentAssolits}%</div>
+                        <div class="comparativa-avancada-summary-label">Assolits</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="comparativa-avancada-materia">
+                <div class="comparativa-avancada-materia-header">
+                    <h3 class="comparativa-avancada-materia-title">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        ${assignatura}
+                    </h3>
+                    <div class="comparativa-avancada-materia-stats">
+                        <div class="comparativa-avancada-stat">
+                            <div class="comparativa-avancada-stat-label">Total</div>
+                            <div class="comparativa-avancada-stat-value">${totalStats.total}</div>
+                        </div>
+                        <div class="comparativa-avancada-stat">
+                            <div class="comparativa-avancada-stat-label">% Assolits</div>
+                            <div class="comparativa-avancada-stat-value">${totalStats.percentAssolits}%</div>
+                        </div>
+                        <div class="comparativa-avancada-stat">
+                            <div class="comparativa-avancada-stat-label">% NA</div>
+                            <div class="comparativa-avancada-stat-value">${totalStats.percentNA}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparativa-avancada-trimestres">
+                    ${trimestresHTML}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    content.innerHTML = assignaturesHTML;
+}
+
 // Canviar vista de comparativa detallada
 function toggleComparativaView() {
     const tableView = document.getElementById('comparativaTableView');
@@ -2639,6 +2872,81 @@ function exportComparativaDetallada() {
     
     downloadCSV(csv, `comparativa_detallada_${new Date().toISOString().split('T')[0]}.csv`);
     showStatus('success', 'Comparativa detallada exportada correctament');
+}
+
+// Exportar comparativa avançada
+function exportComparativaAvancada() {
+    if (filteredData.length === 0) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    // Agrupar per assignatura i trimestre
+    const grups = {};
+    filteredData.forEach(item => {
+        const key = `${item.assignatura_nom}|${item.trimestre}`;
+        if (!grups[key]) {
+            grups[key] = {
+                assignatura: item.assignatura_nom,
+                trimestre: item.trimestre,
+                total: 0,
+                na: 0,
+                as: 0,
+                an: 0,
+                ae: 0
+            };
+        }
+        grups[key].total++;
+        
+        switch (item.assoliment) {
+            case 'NA': grups[key].na++; break;
+            case 'AS': grups[key].as++; break;
+            case 'AN': grups[key].an++; break;
+            case 'AE': grups[key].ae++; break;
+        }
+    });
+    
+    // Calcular percentatges
+    const resultats = Object.values(grups).map(grup => ({
+        ...grup,
+        percentNA: grup.total > 0 ? Math.round((grup.na / grup.total) * 100) : 0,
+        percentAS: grup.total > 0 ? Math.round((grup.as / grup.total) * 100) : 0,
+        percentAN: grup.total > 0 ? Math.round((grup.an / grup.total) * 100) : 0,
+        percentAE: grup.total > 0 ? Math.round((grup.ae / grup.total) * 100) : 0,
+        percentAssolits: grup.total > 0 ? Math.round(((grup.as + grup.an + grup.ae) / grup.total) * 100) : 0
+    })).sort((a, b) => {
+        if (a.assignatura !== b.assignatura) {
+            return a.assignatura.localeCompare(b.assignatura);
+        }
+        const trimestreOrder = { '1r trim': 1, '2n trim': 2, '3r trim': 3, 'final': 4 };
+        return (trimestreOrder[a.trimestre] || 0) - (trimestreOrder[b.trimestre] || 0);
+    });
+    
+    const csvData = [
+        ['Comparativa Avançada per Assignatura i Trimestre'],
+        [''],
+        ['Assignatura', 'Trimestre', 'Total', 'NA (%)', 'AS (%)', 'AN (%)', 'AE (%)', '% Assolits']
+    ];
+    
+    resultats.forEach(item => {
+        csvData.push([
+            item.assignatura,
+            item.trimestre,
+            item.total,
+            item.percentNA + '%',
+            item.percentAS + '%',
+            item.percentAN + '%',
+            item.percentAE + '%',
+            item.percentAssolits + '%'
+        ]);
+    });
+    
+    const csv = csvData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    downloadCSV(csv, `comparativa_avancada_${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('success', 'Comparativa avançada exportada correctament');
 }
 
 // Exportar comparativa
