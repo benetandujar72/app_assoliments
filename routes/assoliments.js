@@ -183,6 +183,80 @@ router.get('/assignatura/:nom', async (req, res) => {
     }
 });
 
+// GET /api/assoliments/diagnostic - Diagnòstic de dades
+router.get('/diagnostic', async (req, res) => {
+    try {
+        console.log('🔍 Executant diagnòstic de dades...');
+        
+        // Verificar dades a cada taula
+        const estudiantsResult = await query('SELECT COUNT(*) as total FROM estudiants');
+        const assignaturesResult = await query('SELECT COUNT(*) as total FROM assignatures');
+        const assolimentsResult = await query('SELECT COUNT(*) as total FROM assoliments');
+        
+        // Verificar JOINs
+        const joinResult = await query(`
+            SELECT 
+                COUNT(*) as total_joins,
+                COUNT(e.nom) as estudiants_amb_nom,
+                COUNT(ass.nom) as assignatures_amb_nom
+            FROM assoliments a
+            LEFT JOIN estudiants e ON a.estudiant_id = e.id
+            LEFT JOIN assignatures ass ON a.assignatura_id = ass.id
+        `);
+        
+        // Mostrar alguns exemples
+        const exemplesResult = await query(`
+            SELECT 
+                a.id,
+                a.trimestre,
+                a.assoliment,
+                e.nom as estudiant_nom,
+                e.classe,
+                ass.nom as assignatura_nom
+            FROM assoliments a
+            LEFT JOIN estudiants e ON a.estudiant_id = e.id
+            LEFT JOIN assignatures ass ON a.assignatura_id = ass.id
+            LIMIT 5
+        `);
+        
+        const diagnostic = {
+            estudiants: {
+                total: parseInt(estudiantsResult.rows[0].total),
+                mostra: await query('SELECT * FROM estudiants LIMIT 3')
+            },
+            assignatures: {
+                total: parseInt(assignaturesResult.rows[0].total),
+                mostra: await query('SELECT * FROM assignatures LIMIT 3')
+            },
+            assoliments: {
+                total: parseInt(assolimentsResult.rows[0].total),
+                mostra: await query('SELECT * FROM assoliments LIMIT 3')
+            },
+            joins: {
+                total: parseInt(joinResult.rows[0].total_joins),
+                estudiants_amb_nom: parseInt(joinResult.rows[0].estudiants_amb_nom),
+                assignatures_amb_nom: parseInt(joinResult.rows[0].assignatures_amb_nom)
+            },
+            exemples: exemplesResult.rows
+        };
+        
+        console.log('📊 Diagnòstic completat:', diagnostic);
+        
+        res.json({
+            success: true,
+            diagnostic: diagnostic
+        });
+        
+    } catch (error) {
+        console.error('Error en diagnòstic:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error executant el diagnòstic',
+            message: error.message
+        });
+    }
+});
+
 // POST /api/assoliments - Crear un nou assoliment
 router.post('/', async (req, res) => {
     try {

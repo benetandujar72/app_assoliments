@@ -44,20 +44,44 @@ document.addEventListener('DOMContentLoaded', function() {
 async function verificarDadesExistents() {
     try {
         console.log('🔍 Verificant dades existents...');
-        const response = await fetch('/api/assoliments?limit=1');
+        
+        // Verificar si hi ha dades a la base de dades
+        const response = await fetch('/api/assoliments?limit=5');
         const result = await response.json();
         
         if (result.success && result.data.length > 0) {
             console.log('✅ Hi ha dades existents, carregant automàticament...');
-            showStatus('info', 'Carregant dades existents...');
             await carregarDadesDelServidor();
+            
+            // Si hi ha problemes amb les dades, executar diagnòstic
+            if (result.data.some(item => !item.estudiant_nom || !item.assignatura_nom)) {
+                console.log('⚠️ Detectats problemes amb les dades, executant diagnòstic...');
+                await diagnosticarDades();
+            }
         } else {
-            console.log('ℹ️ No hi ha dades existents');
-            showStatus('info', 'Benvingut al Dashboard d\'Assoliments. Carrega un fitxer CSV per començar.');
+            console.log('⚠️ No hi ha dades existents, cal carregar un fitxer CSV');
+            showStatus('info', 'Carrega un fitxer CSV per començar');
         }
     } catch (error) {
-        console.log('ℹ️ No hi ha dades existents o error de connexió');
-        showStatus('info', 'Benvingut al Dashboard d\'Assoliments. Carrega un fitxer CSV per començar.');
+        console.error('❌ Error verificant dades:', error);
+        showStatus('error', 'Error verificant les dades existents');
+    }
+}
+
+// Funció per diagnosticar problemes de dades
+async function diagnosticarDades() {
+    try {
+        console.log('🔍 Diagnosticant problemes de dades...');
+        
+        // Verificar dades sense JOINs
+        const response = await fetch('/api/assoliments/diagnostic');
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('📊 Diagnòstic de dades:', result);
+        }
+    } catch (error) {
+        console.error('❌ Error diagnosticant dades:', error);
     }
 }
 
@@ -305,20 +329,34 @@ async function carregarDadesDelServidor() {
         const result = await response.json();
         
         if (result.success) {
+            console.log('🔍 Dades originals del servidor:', result.data.slice(0, 3));
+            
             // Mapejar les dades del backend al format esperat pel frontend
-            currentData = result.data.map(item => ({
-                classe: item.classe,
-                estudiant: item.estudiant_nom,
-                assignatura: item.assignatura_nom,
-                trimestre: item.trimestre,
-                assoliment: item.assoliment,
-                valor_numeric: item.valor_numeric,
-                id: item.id
-            }));
+            currentData = result.data.map(item => {
+                const mappedItem = {
+                    classe: item.classe,
+                    estudiant: item.estudiant_nom,
+                    assignatura: item.assignatura_nom,
+                    trimestre: item.trimestre,
+                    assoliment: item.assoliment,
+                    valor_numeric: item.valor_numeric,
+                    id: item.id
+                };
+                
+                // Debugging per veure què passa amb cada camp
+                if (!item.estudiant_nom) {
+                    console.log('⚠️ estudiant_nom és null/undefined per item:', item);
+                }
+                if (!item.assignatura_nom) {
+                    console.log('⚠️ assignatura_nom és null/undefined per item:', item);
+                }
+                
+                return mappedItem;
+            });
             filteredData = [...currentData];
             
             console.log(`✅ Dades carregades: ${currentData.length} registres`);
-            console.log('📋 Mostra de dades:', currentData.slice(0, 3));
+            console.log('📋 Mostra de dades mapejades:', currentData.slice(0, 3));
             
             // Verificar estructura de dades
             if (currentData.length > 0) {
@@ -330,6 +368,12 @@ async function carregarDadesDelServidor() {
                     trimestre: primerRegistre.trimestre,
                     assoliment: primerRegistre.assoliment
                 });
+                
+                // Comptar registres amb dades vàlides
+                const registresAmbEstudiant = currentData.filter(item => item.estudiant).length;
+                const registresAmbAssignatura = currentData.filter(item => item.assignatura).length;
+                console.log(`📊 Registres amb estudiant vàlid: ${registresAmbEstudiant}/${currentData.length}`);
+                console.log(`📊 Registres amb assignatura vàlida: ${registresAmbAssignatura}/${currentData.length}`);
             }
             
             inicialitzarDashboard();
