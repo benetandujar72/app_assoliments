@@ -3284,6 +3284,10 @@ function handleDebugAction(action) {
             forçarVisualitzacióAnalisiComplet();
             showStatus('info', 'Forçant visualització d\'anàlisi complet...');
             break;
+        case 'force-analysis-complete':
+            verificarIVisualitzarAnalisiComplet();
+            showStatus('info', 'Forçant visualització COMPLETA d\'anàlisi...');
+            break;
         case 'export':
             exportAll();
             break;
@@ -3467,10 +3471,158 @@ function forçarVisualitzacióAnalisiComplet() {
         
         if (visiblePanes.length > 0) {
             showStatus('success', 'Secció d\'anàlisi complet mostrada correctament');
+            
+            // Forçar scroll a la secció d'anàlisi
+            analysisSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Añadir un borde temporal per destacar la secció
+            analysisSection.style.border = '3px solid #3b82f6';
+            analysisSection.style.borderRadius = '8px';
+            analysisSection.style.padding = '20px';
+            analysisSection.style.backgroundColor = '#f8fafc';
+            
+            // Eliminar el borde després de 3 segons
+            setTimeout(() => {
+                analysisSection.style.border = '';
+                analysisSection.style.borderRadius = '';
+                analysisSection.style.padding = '';
+                analysisSection.style.backgroundColor = '';
+            }, 3000);
+            
         } else {
             showStatus('error', 'Error mostrant la secció d\'anàlisi');
         }
     }, 100);
+}
+
+// Funció per verificar i forçar la visualització completa de la secció d'anàlisi
+function verificarIVisualitzarAnalisiComplet() {
+    console.log('🔍 Verificant visualització completa de la secció d\'anàlisi...');
+    
+    // 1. Verificar que el dashboard està visible
+    const dashboardSection = document.getElementById('dashboardSection');
+    if (!dashboardSection) {
+        console.error('❌ Dashboard no trobat');
+        showStatus('error', 'Dashboard no trobat');
+        return;
+    }
+    
+    // Forçar visualització del dashboard
+    dashboardSection.style.display = 'block';
+    dashboardSection.style.opacity = '1';
+    dashboardSection.style.visibility = 'visible';
+    dashboardSection.style.height = 'auto';
+    dashboardSection.style.overflow = 'visible';
+    
+    // 2. Buscar la secció d'anàlisi
+    const analysisSection = dashboardSection.querySelector('.analysis-section');
+    if (!analysisSection) {
+        console.error('❌ Secció d\'anàlisi no trobada');
+        showStatus('error', 'Secció d\'anàlisi no trobada');
+        return;
+    }
+    
+    // 3. Verificar si la secció està oculta per CSS
+    const computedStyle = window.getComputedStyle(analysisSection);
+    console.log('🎨 Estils de la secció d\'anàlisi:', {
+        display: computedStyle.display,
+        opacity: computedStyle.opacity,
+        visibility: computedStyle.visibility,
+        height: computedStyle.height,
+        width: computedStyle.width,
+        position: computedStyle.position,
+        zIndex: computedStyle.zIndex
+    });
+    
+    // 4. Forçar visualització completa
+    analysisSection.style.display = 'block';
+    analysisSection.style.opacity = '1';
+    analysisSection.style.visibility = 'visible';
+    analysisSection.style.height = 'auto';
+    analysisSection.style.overflow = 'visible';
+    analysisSection.style.position = 'relative';
+    analysisSection.style.zIndex = '10';
+    
+    // 5. Verificar que el contenidor pare també està visible
+    const parentContainer = analysisSection.parentElement;
+    if (parentContainer) {
+        parentContainer.style.display = 'block';
+        parentContainer.style.opacity = '1';
+        parentContainer.style.visibility = 'visible';
+        parentContainer.style.height = 'auto';
+        parentContainer.style.overflow = 'visible';
+    }
+    
+    // 6. Buscar i forçar visualització de les pestanyes
+    const analysisTabs = analysisSection.querySelectorAll('.analysis-tab');
+    const analysisPanes = analysisSection.querySelectorAll('.analysis-pane');
+    
+    console.log(`📋 Pestanyes trobades: ${analysisTabs.length}`);
+    console.log(`📋 Panes trobades: ${analysisPanes.length}`);
+    
+    // 7. Forçar visualització de les pestanyes
+    analysisTabs.forEach((tab, index) => {
+        tab.style.display = 'inline-block';
+        tab.style.visibility = 'visible';
+        tab.style.opacity = '1';
+        tab.style.position = 'relative';
+        tab.style.zIndex = '20';
+        console.log(`✅ Pestanya ${index + 1} (${tab.dataset.tab}) forçada a mostrar`);
+    });
+    
+    // 8. Activar la primera pestanya
+    if (analysisTabs.length > 0 && analysisPanes.length > 0) {
+        // Desactivar totes
+        analysisTabs.forEach(tab => tab.classList.remove('active'));
+        analysisPanes.forEach(pane => {
+            pane.classList.remove('active');
+            pane.style.display = 'none';
+        });
+        
+        // Activar primera
+        const firstTab = analysisTabs[0];
+        const firstPane = analysisPanes[0];
+        
+        firstTab.classList.add('active');
+        firstPane.classList.add('active');
+        firstPane.style.display = 'block';
+        firstPane.style.opacity = '1';
+        firstPane.style.visibility = 'visible';
+        firstPane.style.position = 'relative';
+        firstPane.style.zIndex = '15';
+        
+        console.log(`✅ Primera pestanya activada: ${firstTab.dataset.tab}`);
+    }
+    
+    // 9. Forçar scroll i destacar
+    setTimeout(() => {
+        analysisSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+        
+        // Añadir borde temporal
+        analysisSection.style.border = '4px solid #10b981';
+        analysisSection.style.borderRadius = '12px';
+        analysisSection.style.padding = '25px';
+        analysisSection.style.backgroundColor = '#ecfdf5';
+        analysisSection.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+        
+        console.log('✅ Secció d\'anàlisi destacada i visible');
+        showStatus('success', 'Secció d\'anàlisi complet forçada a mostrar');
+        
+        // Eliminar borde després de 5 segons
+        setTimeout(() => {
+            analysisSection.style.border = '';
+            analysisSection.style.borderRadius = '';
+            analysisSection.style.padding = '';
+            analysisSection.style.backgroundColor = '';
+            analysisSection.style.boxShadow = '';
+        }, 5000);
+    }, 200);
 }
 
  
