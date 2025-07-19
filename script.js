@@ -189,64 +189,74 @@ function navigateToStep(step) {
     console.log(`🧭 Navegant a pas: ${step}`);
     currentStep = step;
     
-    // Verificar que els elements existeixen
-    const uploadSection = document.getElementById('uploadSection');
-    const dashboardSection = document.getElementById('dashboardSection');
-    const breadcrumb = document.getElementById('breadcrumb');
-    
-    console.log('🔍 Elements trobats:', {
-        uploadSection: !!uploadSection,
-        dashboardSection: !!dashboardSection,
-        breadcrumb: !!breadcrumb
-    });
-    
-    if (!uploadSection || !dashboardSection) {
-        console.error('❌ Elements de navegació no trobats');
-        showStatus('error', 'Error de navegació: Elements no trobats');
-        return;
-    }
-    
-    // Hide all sections
-    uploadSection.style.display = 'none';
-    dashboardSection.style.display = 'none';
-    
-    // Show breadcrumb
-    if (breadcrumb) {
-        breadcrumb.style.display = 'block';
-    }
-    
-    // Show appropriate section
-    if (step === 'upload') {
-        uploadSection.style.display = 'block';
+    try {
+        // Verificar que els elements existeixen
+        const uploadSection = document.getElementById('uploadSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const breadcrumb = document.getElementById('breadcrumb');
+        
+        console.log('🔍 Elements trobats:', {
+            uploadSection: !!uploadSection,
+            dashboardSection: !!dashboardSection,
+            breadcrumb: !!breadcrumb
+        });
+        
+        if (!uploadSection || !dashboardSection) {
+            console.error('❌ Elements de navegació no trobats');
+            showStatus('error', 'Error de navegació: Elements no trobats');
+            return;
+        }
+        
+        console.log('🔍 Ocultant totes les seccions...');
+        // Hide all sections
+        uploadSection.style.display = 'none';
+        dashboardSection.style.display = 'none';
+        
+        // Show breadcrumb
         if (breadcrumb) {
-            breadcrumb.style.display = 'none';
+            breadcrumb.style.display = 'block';
         }
-        console.log('✅ Secció d\'upload mostrada');
-    } else if (step === 'dashboard') {
-        dashboardSection.style.display = 'block';
-        if (breadcrumb) {
-            updateBreadcrumb(step);
+        
+        // Show appropriate section
+        if (step === 'upload') {
+            console.log('🔍 Mostrant secció d\'upload...');
+            uploadSection.style.display = 'block';
+            if (breadcrumb) {
+                breadcrumb.style.display = 'none';
+            }
+            console.log('✅ Secció d\'upload mostrada');
+        } else if (step === 'dashboard') {
+            console.log('🔍 Mostrant secció de dashboard...');
+            dashboardSection.style.display = 'block';
+            if (breadcrumb) {
+                updateBreadcrumb(step);
+            }
+            console.log('✅ Secció de dashboard mostrada');
+            
+            // Forçar reflow per assegurar que es mostra
+            dashboardSection.offsetHeight;
+            
+            // Verificar que realment es mostra
+            const isVisible = dashboardSection.style.display !== 'none';
+            console.log(`🔍 Dashboard visible: ${isVisible}`);
+            
+            if (!isVisible) {
+                console.error('❌ Dashboard no es mostra correctament');
+                // Intentar forçar la visualització
+                dashboardSection.style.display = 'block !important';
+            }
         }
-        console.log('✅ Secció de dashboard mostrada');
         
-        // Forçar reflow per assegurar que es mostra
-        dashboardSection.offsetHeight;
+        // Update breadcrumb active state
+        updateBreadcrumbActive(step);
         
-        // Verificar que realment es mostra
-        const isVisible = dashboardSection.style.display !== 'none';
-        console.log(`🔍 Dashboard visible: ${isVisible}`);
+        console.log(`✅ Navegació completada a: ${step}`);
         
-        if (!isVisible) {
-            console.error('❌ Dashboard no es mostra correctament');
-            // Intentar forçar la visualització
-            dashboardSection.style.display = 'block !important';
-        }
+    } catch (error) {
+        console.error('❌ Error en navigateToStep:', error);
+        console.error('❌ Stack trace:', error.stack);
+        throw error; // Re-lançar l'error per capturar-lo a inicialitzarDashboard
     }
-    
-    // Update breadcrumb active state
-    updateBreadcrumbActive(step);
-    
-    console.log(`✅ Navegació completada a: ${step}`);
 }
 
 function updateBreadcrumb(step) {
@@ -456,8 +466,10 @@ function inicialitzarDashboard() {
     });
     
     try {
+        console.log('🔍 Pas 1: Verificant elements del DOM...');
         // Verificar que els elements del DOM existeixen
         const elements = verificarElementsDOM();
+        console.log('✅ Pas 1 completat');
         
         // Verificar que tenim dades
         if (currentData.length === 0) {
@@ -466,31 +478,37 @@ function inicialitzarDashboard() {
             return;
         }
         
+        console.log('🔍 Pas 2: Navegant al dashboard...');
         // Navigate to dashboard
-        console.log('🧭 Navegant al dashboard...');
         navigateToStep('dashboard');
+        console.log('✅ Pas 2 completat');
         
+        console.log('🔍 Pas 3: Actualitzant targetes de resum...');
         // Update overview cards
-        console.log('📊 Actualitzant targetes de resum...');
         actualitzarOverviewCards();
+        console.log('✅ Pas 3 completat');
         
+        console.log('🔍 Pas 4: Omplint filtres...');
         // Fill filters
-        console.log('🔍 Omplint filtres...');
         omplirFiltres();
+        console.log('✅ Pas 4 completat');
         
+        console.log('🔍 Pas 5: Actualitzant gràfics...');
         // Update charts
-        console.log('📈 Actualitzant gràfics...');
         actualitzarGraficos();
+        console.log('✅ Pas 5 completat');
         
+        console.log('🔍 Pas 6: Actualitzant seccions d\'anàlisi...');
         // Update analysis sections
-        console.log('📋 Actualitzant seccions d\'anàlisi...');
         actualitzarAnalisiSections();
+        console.log('✅ Pas 6 completat');
         
         console.log('✅ Dashboard inicialitzat correctament');
         showStatus('success', 'Dashboard carregat correctament');
         
     } catch (error) {
         console.error('❌ Error inicialitzant dashboard:', error);
+        console.error('❌ Stack trace:', error.stack);
         showStatus('error', 'Error inicialitzant el dashboard: ' + error.message);
     }
 }
