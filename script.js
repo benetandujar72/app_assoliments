@@ -626,6 +626,344 @@ function actualitzarAnalisiSections() {
     
     // Update detailed comparative table
     actualitzarTaulaComparativaDetallada();
+    
+    // Update advanced statistics
+    actualitzarEstadistiquesAvancades();
+}
+
+// ===== ADVANCED STATISTICS FUNCTIONS =====
+function actualitzarEstadistiquesAvancades() {
+    console.log('📊 Actualitzant estadístiques avançades...');
+    
+    if (filteredData.length === 0) {
+        console.log('⚠️ No hi ha dades per estadístiques avançades');
+        return;
+    }
+    
+    // Anàlisi de tendències
+    const tendencies = analitzarTendencies();
+    
+    // Anàlisi de correlacions
+    const correlations = analitzarCorrelacions();
+    
+    // Mètriques avançades
+    const metrics = calcularMetriquesAvancades();
+    
+    // Mostrar resultats
+    mostrarEstadistiquesAvancades(tendencies, correlations, metrics);
+}
+
+function analitzarTendencies() {
+    console.log('📈 Analitzant tendències...');
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const assolimentValues = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 };
+    
+    const tendencies = {};
+    
+    // Tendència general per trimestre
+    const tendenciaGeneral = trimestres.map(trimestre => {
+        const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
+        if (trimestreData.length === 0) return null;
+        
+        const totalValue = trimestreData.reduce((sum, item) => {
+            return sum + (assolimentValues[item.assoliment] || 0);
+        }, 0);
+        
+        return {
+            trimestre,
+            mitjana: (totalValue / trimestreData.length / 3) * 100,
+            total: trimestreData.length
+        };
+    }).filter(item => item !== null);
+    
+    // Calcular tendència (millora o deteriorament)
+    if (tendenciaGeneral.length >= 2) {
+        const primer = tendenciaGeneral[0].mitjana;
+        const ultim = tendenciaGeneral[tendenciaGeneral.length - 1].mitjana;
+        const diferencia = ultim - primer;
+        const percentatge = ((diferencia / primer) * 100).toFixed(1);
+        
+        tendencies.general = {
+            tendencia: diferencia > 0 ? 'millora' : diferencia < 0 ? 'deteriorament' : 'estable',
+            diferencia: diferencia.toFixed(1),
+            percentatge: percentatge,
+            primer: primer.toFixed(1),
+            ultim: ultim.toFixed(1)
+        };
+    }
+    
+    // Tendència per assignatura
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    tendencies.assignatures = {};
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        const tendenciaAssignatura = trimestres.map(trimestre => {
+            const trimestreData = assignaturaData.filter(item => item.trimestre === trimestre);
+            if (trimestreData.length === 0) return null;
+            
+            const totalValue = trimestreData.reduce((sum, item) => {
+                return sum + (assolimentValues[item.assoliment] || 0);
+            }, 0);
+            
+            return (totalValue / trimestreData.length / 3) * 100;
+        }).filter(item => item !== null);
+        
+        if (tendenciaAssignatura.length >= 2) {
+            const primer = tendenciaAssignatura[0];
+            const ultim = tendenciaAssignatura[tendenciaAssignatura.length - 1];
+            const diferencia = ultim - primer;
+            
+            tendencies.assignatures[assignatura] = {
+                tendencia: diferencia > 0 ? 'millora' : diferencia < 0 ? 'deteriorament' : 'estable',
+                diferencia: diferencia.toFixed(1),
+                primer: primer.toFixed(1),
+                ultim: ultim.toFixed(1)
+            };
+        }
+    });
+    
+    console.log('✅ Tendències analitzades:', tendencies);
+    return tendencies;
+}
+
+function analitzarCorrelacions() {
+    console.log('🔗 Analitzant correlacions...');
+    
+    const correlations = {};
+    
+    // Correlació entre assignatures
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const assolimentValues = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 };
+    
+    // Crear matriu de correlacions
+    const correlationMatrix = {};
+    
+    assignatures.forEach(assignatura1 => {
+        correlationMatrix[assignatura1] = {};
+        assignatures.forEach(assignatura2 => {
+            if (assignatura1 === assignatura2) {
+                correlationMatrix[assignatura1][assignatura2] = 1;
+            } else {
+                // Calcular correlació entre assignatures
+                const assignatura1Data = filteredData.filter(item => item.assignatura === assignatura1);
+                const assignatura2Data = filteredData.filter(item => item.assignatura === assignatura2);
+                
+                // Agrupar per estudiant i calcular mitjanes
+                const estudiants = [...new Set(filteredData.map(item => item.estudiant))];
+                const assignatura1Mitjanes = [];
+                const assignatura2Mitjanes = [];
+                
+                estudiants.forEach(estudiant => {
+                    const est1Data = assignatura1Data.filter(item => item.estudiant === estudiant);
+                    const est2Data = assignatura2Data.filter(item => item.estudiant === estudiant);
+                    
+                    if (est1Data.length > 0 && est2Data.length > 0) {
+                        const mitjana1 = est1Data.reduce((sum, item) => sum + (assolimentValues[item.assoliment] || 0), 0) / est1Data.length;
+                        const mitjana2 = est2Data.reduce((sum, item) => sum + (assolimentValues[item.assoliment] || 0), 0) / est2Data.length;
+                        
+                        assignatura1Mitjanes.push(mitjana1);
+                        assignatura2Mitjanes.push(mitjana2);
+                    }
+                });
+                
+                // Calcular correlació de Pearson
+                if (assignatura1Mitjanes.length > 1) {
+                    const correlation = calcularCorrelacioPearson(assignatura1Mitjanes, assignatura2Mitjanes);
+                    correlationMatrix[assignatura1][assignatura2] = correlation;
+                } else {
+                    correlationMatrix[assignatura1][assignatura2] = 0;
+                }
+            }
+        });
+    });
+    
+    correlations.assignatures = correlationMatrix;
+    
+    // Trobar correlacions més fortes
+    const correlacionsFortes = [];
+    assignatures.forEach(assignatura1 => {
+        assignatures.forEach(assignatura2 => {
+            if (assignatura1 !== assignatura2) {
+                const correlacio = correlationMatrix[assignatura1][assignatura2];
+                if (Math.abs(correlacio) > 0.7) {
+                    correlacionsFortes.push({
+                        assignatura1,
+                        assignatura2,
+                        correlacio: correlacio.toFixed(3),
+                        tipus: correlacio > 0 ? 'positiva' : 'negativa'
+                    });
+                }
+            }
+        });
+    });
+    
+    correlations.fortes = correlacionsFortes;
+    
+    console.log('✅ Correlacions analitzades:', correlations);
+    return correlations;
+}
+
+function calcularCorrelacioPearson(x, y) {
+    const n = x.length;
+    if (n !== y.length || n === 0) return 0;
+    
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+    const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+    
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    
+    return denominator === 0 ? 0 : numerator / denominator;
+}
+
+function calcularMetriquesAvancades() {
+    console.log('📊 Calculant mètriques avançades...');
+    
+    const metrics = {};
+    
+    // Distribució d'assoliments
+    const assolimentCounts = {
+        'NA': filteredData.filter(item => item.assoliment === 'NA').length,
+        'AS': filteredData.filter(item => item.assoliment === 'AS').length,
+        'AN': filteredData.filter(item => item.assoliment === 'AN').length,
+        'AE': filteredData.filter(item => item.assoliment === 'AE').length
+    };
+    
+    const total = filteredData.length;
+    metrics.distribucio = {
+        na: ((assolimentCounts.NA / total) * 100).toFixed(1),
+        as: ((assolimentCounts.AS / total) * 100).toFixed(1),
+        an: ((assolimentCounts.AN / total) * 100).toFixed(1),
+        ae: ((assolimentCounts.AE / total) * 100).toFixed(1)
+    };
+    
+    // Rendiment per classe
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    metrics.rendimentPerClasse = {};
+    
+    classes.forEach(classe => {
+        const classeData = filteredData.filter(item => item.classe === classe);
+        const assolits = classeData.filter(item => item.assoliment !== 'NA').length;
+        metrics.rendimentPerClasse[classe] = ((assolits / classeData.length) * 100).toFixed(1);
+    });
+    
+    // Assignatures amb millor i pitjor rendiment
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const rendimentAssignatures = {};
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        const assolits = assignaturaData.filter(item => item.assoliment !== 'NA').length;
+        rendimentAssignatures[assignatura] = ((assolits / assignaturaData.length) * 100).toFixed(1);
+    });
+    
+    const sortedAssignatures = Object.entries(rendimentAssignatures)
+        .sort(([,a], [,b]) => parseFloat(b) - parseFloat(a));
+    
+    metrics.millorAssignatura = sortedAssignatures[0];
+    metrics.pitjorAssignatura = sortedAssignatures[sortedAssignatures.length - 1];
+    
+    // Evolució temporal
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const evolucions = trimestres.map(trimestre => {
+        const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
+        if (trimestreData.length === 0) return null;
+        
+        const assolits = trimestreData.filter(item => item.assoliment !== 'NA').length;
+        return {
+            trimestre,
+            percentatge: ((assolits / trimestreData.length) * 100).toFixed(1),
+            total: trimestreData.length
+        };
+    }).filter(item => item !== null);
+    
+    metrics.evolucio = evolucions;
+    
+    console.log('✅ Mètriques avançades calculades:', metrics);
+    return metrics;
+}
+
+function mostrarEstadistiquesAvancades(tendencies, correlations, metrics) {
+    console.log('📋 Mostrant estadístiques avançades...');
+    
+    // Crear o actualitzar secció d'estadístiques avançades
+    let advancedStatsHTML = `
+        <div class="advanced-stats-section">
+            <h4>Estadístiques Avançades</h4>
+            
+            <!-- Tendències -->
+            <div class="stats-card">
+                <h5>📈 Anàlisi de Tendències</h5>
+                ${tendencies.general ? `
+                    <div class="trend-analysis">
+                        <p><strong>Tendència General:</strong> ${tendencies.general.tendencia}</p>
+                        <p>Diferència: ${tendencies.general.diferencia}% (${tendencies.general.percentatge}%)</p>
+                        <p>Evolució: ${tendencies.general.primer}% → ${tendencies.general.ultim}%</p>
+                    </div>
+                ` : '<p>No hi ha dades suficients per analitzar tendències</p>'}
+            </div>
+            
+            <!-- Correlacions -->
+            <div class="stats-card">
+                <h5>🔗 Correlacions Fortes</h5>
+                ${correlations.fortes && correlations.fortes.length > 0 ? `
+                    <div class="correlations-list">
+                        ${correlations.fortes.map(corr => `
+                            <div class="correlation-item">
+                                <span>${corr.assignatura1} ↔ ${corr.assignatura2}</span>
+                                <span class="correlation-value ${corr.tipus}">${corr.correlacio} (${corr.tipus})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p>No s\'han trobat correlacions fortes</p>'}
+            </div>
+            
+            <!-- Mètriques -->
+            <div class="stats-card">
+                <h5>📊 Mètriques Clau</h5>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Millor Assignatura:</span>
+                        <span class="metric-value">${metrics.millorAssignatura ? metrics.millorAssignatura[0] + ' (' + metrics.millorAssignatura[1] + '%)' : 'N/A'}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Pitjor Assignatura:</span>
+                        <span class="metric-value">${metrics.pitjorAssignatura ? metrics.pitjorAssignatura[0] + ' (' + metrics.pitjorAssignatura[1] + '%)' : 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Evolució Temporal -->
+            <div class="stats-card">
+                <h5>⏰ Evolució Temporal</h5>
+                <div class="evolution-chart">
+                    ${metrics.evolucio.map(evol => `
+                        <div class="evolution-item">
+                            <span class="evolution-period">${evol.trimestre}</span>
+                            <div class="evolution-bar">
+                                <div class="evolution-fill" style="width: ${evol.percentatge}%"></div>
+                            </div>
+                            <span class="evolution-value">${evol.percentatge}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Buscar on inserir les estadístiques avançades
+    const comparativesContent = document.getElementById('comparativaAvancadaContent');
+    if (comparativesContent) {
+        // Afegir després del contingut existent
+        comparativesContent.insertAdjacentHTML('beforeend', advancedStatsHTML);
+    }
+    
+    console.log('✅ Estadístiques avançades mostrades');
 }
 
 // ===== ANALYSIS TAB HANDLING =====
@@ -1318,6 +1656,12 @@ function inicialitzarComparatives() {
         exportBtn.addEventListener('click', exportComparativaAvancada);
     }
     
+    // Add event listeners for advanced statistics export
+    const exportAdvancedBtn = document.getElementById('exportEstadistiquesAvancades');
+    if (exportAdvancedBtn) {
+        exportAdvancedBtn.addEventListener('click', exportEstadistiquesAvancades);
+    }
+    
     // Add event listeners for detailed comparative
     const toggleBtn = document.getElementById('toggleComparativaView');
     if (toggleBtn) {
@@ -1718,57 +2062,140 @@ function exportComparativaAvancada() {
 }
 
 function exportComparativaDetallada() {
-    console.log('📤 Exportant comparativa detallada...');
-    
     if (filteredData.length === 0) {
-        showStatus('warning', 'No hi ha dades per exportar');
+        showStatus('error', 'No hi ha dades per exportar');
         return;
     }
     
-    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
-    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
-    
-    let csvData = 'Assignatura,Trimestre,Total,NA (%),AS (%),AN (%),AE (%),% Assolits\n';
-    
-    assignatures.forEach(assignatura => {
-        trimestres.forEach(trimestre => {
-            const trimestreData = filteredData.filter(item => 
-                item.assignatura === assignatura && item.trimestre === trimestre
-            );
-            
-            if (trimestreData.length === 0) {
-                csvData += `${assignatura},${trimestre},0,0,0,0,0,0\n`;
-                return;
-            }
-            
-            const total = trimestreData.length;
-            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
-            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
-            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
-            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
-            
-            const naPercent = ((na / total) * 100).toFixed(1);
-            const asPercent = ((as / total) * 100).toFixed(1);
-            const anPercent = ((an / total) * 100).toFixed(1);
-            const aePercent = ((ae / total) * 100).toFixed(1);
-            const assolitsPercent = (((as + an + ae) / total) * 100).toFixed(1);
-            
-            csvData += `${assignatura},${trimestre},${total},${naPercent},${asPercent},${anPercent},${aePercent},${assolitsPercent}\n`;
+    try {
+        const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+        const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+        
+        let csvContent = 'Assignatura,Trimestre,Total,NA,AS,AN,AE,%NA,%AS,%AN,%AE\n';
+        
+        assignatures.forEach(assignatura => {
+            trimestres.forEach(trimestre => {
+                const trimestreData = filteredData.filter(item => 
+                    item.assignatura === assignatura && item.trimestre === trimestre
+                );
+                
+                if (trimestreData.length > 0) {
+                    const total = trimestreData.length;
+                    const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+                    const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+                    const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+                    const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+                    
+                    const naPercent = ((na / total) * 100).toFixed(1);
+                    const asPercent = ((as / total) * 100).toFixed(1);
+                    const anPercent = ((an / total) * 100).toFixed(1);
+                    const aePercent = ((ae / total) * 100).toFixed(1);
+                    
+                    csvContent += `${assignatura},${trimestre},${total},${na},${as},${an},${ae},${naPercent}%,${asPercent}%,${anPercent}%,${aePercent}%\n`;
+                }
+            });
         });
-    });
+        
+        downloadCSV(csvContent, 'comparativa_detallada.csv');
+        showStatus('success', 'Comparativa detallada exportada correctament');
+        
+    } catch (error) {
+        console.error('Error exportant comparativa detallada:', error);
+        showStatus('error', 'Error exportant la comparativa detallada');
+    }
+}
+
+function exportEstadistiquesAvancades() {
+    if (filteredData.length === 0) {
+        showStatus('error', 'No hi ha dades per exportar');
+        return;
+    }
     
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    try {
+        // Calcular estadístiques avançades
+        const tendencies = analitzarTendencies();
+        const correlations = analitzarCorrelacions();
+        const metrics = calcularMetriquesAvancades();
+        
+        let csvContent = '';
+        
+        // Secció 1: Tendències
+        csvContent += 'SECCIÓ: TENDÈNCIES\n';
+        csvContent += 'Tipus,Tendència,Diferència,Percentatge,Primer,Últim\n';
+        
+        if (tendencies.general) {
+            csvContent += `General,${tendencies.general.tendencia},${tendencies.general.diferencia}%,${tendencies.general.percentatge}%,${tendencies.general.primer}%,${tendencies.general.ultim}%\n`;
+        }
+        
+        Object.entries(tendencies.assignatures || {}).forEach(([assignatura, data]) => {
+            csvContent += `${assignatura},${data.tendencia},${data.diferencia}%,${data.primer}%,${data.ultim}%\n`;
+        });
+        
+        csvContent += '\n';
+        
+        // Secció 2: Correlacions Fortes
+        csvContent += 'SECCIÓ: CORRELACIONS FORTES\n';
+        csvContent += 'Assignatura1,Assignatura2,Correlació,Tipus\n';
+        
+        (correlations.fortes || []).forEach(corr => {
+            csvContent += `${corr.assignatura1},${corr.assignatura2},${corr.correlacio},${corr.tipus}\n`;
+        });
+        
+        csvContent += '\n';
+        
+        // Secció 3: Mètriques Clau
+        csvContent += 'SECCIÓ: MÈTRIQUES CLAU\n';
+        csvContent += 'Mètrica,Valor\n';
+        
+        if (metrics.millorAssignatura) {
+            csvContent += `Millor Assignatura,${metrics.millorAssignatura[0]} (${metrics.millorAssignatura[1]}%)\n`;
+        }
+        if (metrics.pitjorAssignatura) {
+            csvContent += `Pitjor Assignatura,${metrics.pitjorAssignatura[0]} (${metrics.pitjorAssignatura[1]}%)\n`;
+        }
+        
+        csvContent += '\n';
+        
+        // Secció 4: Evolució Temporal
+        csvContent += 'SECCIÓ: EVOLUCIÓ TEMPORAL\n';
+        csvContent += 'Trimestre,Percentatge,Total\n';
+        
+        (metrics.evolucio || []).forEach(evol => {
+            csvContent += `${evol.trimestre},${evol.percentatge}%,${evol.total}\n`;
+        });
+        
+        csvContent += '\n';
+        
+        // Secció 5: Rendiment per Classe
+        csvContent += 'SECCIÓ: RENDIMENT PER CLASSE\n';
+        csvContent += 'Classe,Rendiment\n';
+        
+        Object.entries(metrics.rendimentPerClasse || {}).forEach(([classe, rendiment]) => {
+            csvContent += `${classe},${rendiment}%\n`;
+        });
+        
+        downloadCSV(csvContent, 'estadistiques_avançades.csv');
+        showStatus('success', 'Estadístiques avançades exportades correctament');
+        
+    } catch (error) {
+        console.error('Error exportant estadístiques avançades:', error);
+        showStatus('error', 'Error exportant les estadístiques avançades');
+    }
+}
+
+function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'comparativa_detallada.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
     
-    showStatus('success', 'Comparativa detallada exportada correctament');
-    console.log('✅ Comparativa detallada exportada');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }
 
 // ===== DATA MANAGEMENT FUNCTIONS =====
