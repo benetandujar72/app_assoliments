@@ -379,40 +379,159 @@ function actualitzarOverviewCards() {
 function omplirFiltres() {
     console.log('🔍 Omplint filtres...');
     
-    if (filteredData.length === 0) return;
+    if (filteredData.length === 0) {
+        console.log('⚠️ No hi ha dades per omplir els filtres');
+        return;
+    }
     
-    // Classes
-    const classes = [...new Set(filteredData.map(item => item.classe))].sort();
+    try {
+        // Classes
+        const classes = [...new Set(filteredData.map(item => item.classe))].sort();
+        const classeFilter = document.getElementById('classeFilter');
+        if (classeFilter) {
+            classeFilter.innerHTML = '<option value="">Totes les classes</option>';
+            classes.forEach(classe => {
+                const option = document.createElement('option');
+                option.value = classe;
+                option.textContent = classe;
+                classeFilter.appendChild(option);
+            });
+            console.log(`✅ Filtre de classes omplert: ${classes.length} classes`);
+        }
+        
+        // Students
+        const students = [...new Set(filteredData.map(item => item.estudiant))].sort();
+        const estudiantFilter = document.getElementById('estudiantFilter');
+        if (estudiantFilter) {
+            estudiantFilter.innerHTML = '<option value="">Tots els estudiants</option>';
+            students.forEach(estudiant => {
+                const option = document.createElement('option');
+                option.value = estudiant;
+                option.textContent = estudiant;
+                estudiantFilter.appendChild(option);
+            });
+            console.log(`✅ Filtre d'estudiants omplert: ${students.length} estudiants`);
+        }
+        
+        // Subjects
+        const subjects = [...new Set(filteredData.map(item => item.assignatura))].sort();
+        const assignaturaFilter = document.getElementById('assignaturaFilter');
+        if (assignaturaFilter) {
+            assignaturaFilter.innerHTML = '<option value="">Totes les assignatures</option>';
+            subjects.forEach(assignatura => {
+                const option = document.createElement('option');
+                option.value = assignatura;
+                option.textContent = assignatura;
+                assignaturaFilter.appendChild(option);
+            });
+            console.log(`✅ Filtre d'assignatures omplert: ${subjects.length} assignatures`);
+        }
+        
+        // Trimestres (ja estan definits al HTML)
+        console.log('✅ Filtre de trimestres ja definit al HTML');
+        
+        // Assoliments (ja estan definits al HTML)
+        console.log('✅ Filtre d\'assoliments ja definit al HTML');
+        
+        // Afegir event listeners per filtres dependents
+        afegirEventListenersFiltres();
+        
+        console.log('✅ Tots els filtres omplerts correctament');
+        
+    } catch (error) {
+        console.error('❌ Error omplint filtres:', error);
+        showStatus('error', 'Error omplint els filtres: ' + error.message);
+    }
+}
+
+function afegirEventListenersFiltres() {
+    console.log('🔗 Afegint event listeners als filtres...');
+    
+    // Filtre de classe afecta estudiants
     const classeFilter = document.getElementById('classeFilter');
-    classeFilter.innerHTML = '<option value="">Totes les classes</option>';
-    classes.forEach(classe => {
-        const option = document.createElement('option');
-        option.value = classe;
-        option.textContent = classe;
-        classeFilter.appendChild(option);
-    });
+    if (classeFilter) {
+        classeFilter.addEventListener('change', function() {
+            const classeSeleccionada = this.value;
+            actualitzarFiltreEstudiants(classeSeleccionada);
+        });
+    }
     
-    // Students
-    const students = [...new Set(filteredData.map(item => item.estudiant))].sort();
+    // Filtre d'estudiant afecta assignatures
     const estudiantFilter = document.getElementById('estudiantFilter');
+    if (estudiantFilter) {
+        estudiantFilter.addEventListener('change', function() {
+            const estudiantSeleccionat = this.value;
+            actualitzarFiltreAssignatures(estudiantSeleccionat);
+        });
+    }
+    
+    console.log('✅ Event listeners dels filtres afegits');
+}
+
+function actualitzarFiltreEstudiants(classeSeleccionada) {
+    console.log(`🔄 Actualitzant filtre d'estudiants per classe: ${classeSeleccionada}`);
+    
+    const estudiantFilter = document.getElementById('estudiantFilter');
+    if (!estudiantFilter) return;
+    
+    // Obtenir estudiants de la classe seleccionada
+    let estudiantsFiltrats;
+    if (classeSeleccionada) {
+        estudiantsFiltrats = [...new Set(
+            filteredData
+                .filter(item => item.classe === classeSeleccionada)
+                .map(item => item.estudiant)
+        )].sort();
+    } else {
+        estudiantsFiltrats = [...new Set(filteredData.map(item => item.estudiant))].sort();
+    }
+    
+    // Actualitzar opcions
     estudiantFilter.innerHTML = '<option value="">Tots els estudiants</option>';
-    students.forEach(estudiant => {
+    estudiantsFiltrats.forEach(estudiant => {
         const option = document.createElement('option');
         option.value = estudiant;
         option.textContent = estudiant;
         estudiantFilter.appendChild(option);
     });
     
-    // Subjects
-    const subjects = [...new Set(filteredData.map(item => item.assignatura))].sort();
+    // Netejar selecció actual
+    estudiantFilter.value = '';
+    
+    console.log(`✅ Filtre d'estudiants actualitzat: ${estudiantsFiltrats.length} estudiants`);
+}
+
+function actualitzarFiltreAssignatures(estudiantSeleccionat) {
+    console.log(`🔄 Actualitzant filtre d'assignatures per estudiant: ${estudiantSeleccionat}`);
+    
     const assignaturaFilter = document.getElementById('assignaturaFilter');
+    if (!assignaturaFilter) return;
+    
+    // Obtenir assignatures de l'estudiant seleccionat
+    let assignaturesFiltrats;
+    if (estudiantSeleccionat) {
+        assignaturesFiltrats = [...new Set(
+            filteredData
+                .filter(item => item.estudiant === estudiantSeleccionat)
+                .map(item => item.assignatura)
+        )].sort();
+    } else {
+        assignaturesFiltrats = [...new Set(filteredData.map(item => item.assignatura))].sort();
+    }
+    
+    // Actualitzar opcions
     assignaturaFilter.innerHTML = '<option value="">Totes les assignatures</option>';
-    subjects.forEach(assignatura => {
+    assignaturesFiltrats.forEach(assignatura => {
         const option = document.createElement('option');
         option.value = assignatura;
         option.textContent = assignatura;
         assignaturaFilter.appendChild(option);
     });
+    
+    // Netejar selecció actual
+    assignaturaFilter.value = '';
+    
+    console.log(`✅ Filtre d'assignatures actualitzat: ${assignaturesFiltrats.length} assignatures`);
 }
 
 function actualitzarGraficos() {
@@ -444,6 +563,9 @@ function actualitzarAnalisiSections() {
     // Update statistics tables
     actualitzarEstadistiquesPerAssignatura();
     actualitzarEstadistiquesPerTrimestre();
+    
+    // Update detailed comparative table
+    actualitzarTaulaComparativaDetallada();
 }
 
 // ===== ANALYSIS TAB HANDLING =====
@@ -1135,6 +1257,17 @@ function inicialitzarComparatives() {
     if (exportBtn) {
         exportBtn.addEventListener('click', exportComparativaAvancada);
     }
+    
+    // Add event listeners for detailed comparative
+    const toggleBtn = document.getElementById('toggleComparativaView');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleComparativaView);
+    }
+    
+    const exportDetalladaBtn = document.getElementById('exportComparativaDetallada');
+    if (exportDetalladaBtn) {
+        exportDetalladaBtn.addEventListener('click', exportComparativaDetallada);
+    }
 }
 
 function actualitzarComparativaAvancada() {
@@ -1257,6 +1390,223 @@ function actualitzarComparativaAvancada() {
     content.innerHTML = assignaturesHTML;
 }
 
+function actualitzarTaulaComparativaDetallada() {
+    console.log('📊 Actualitzant taula comparativa detallada...');
+    
+    const tableBody = document.getElementById('comparativaDetalladaTableBody');
+    if (!tableBody) {
+        console.log('⚠️ No es troba la taula comparativa detallada');
+        return;
+    }
+    
+    if (filteredData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8">No hi ha dades disponibles</td></tr>';
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    
+    let html = '';
+    
+    assignatures.forEach(assignatura => {
+        trimestres.forEach(trimestre => {
+            const trimestreData = filteredData.filter(item => 
+                item.assignatura === assignatura && item.trimestre === trimestre
+            );
+            
+            if (trimestreData.length === 0) return;
+            
+            const total = trimestreData.length;
+            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+            
+            const naPercent = ((na / total) * 100).toFixed(1);
+            const asPercent = ((as / total) * 100).toFixed(1);
+            const anPercent = ((an / total) * 100).toFixed(1);
+            const aePercent = ((ae / total) * 100).toFixed(1);
+            const assolitsPercent = (((as + an + ae) / total) * 100).toFixed(1);
+            
+            const trimestreName = {
+                '1r trim': '1r Trimestre',
+                '2n trim': '2n Trimestre',
+                '3r trim': '3r Trimestre',
+                'final': 'Final'
+            }[trimestre];
+            
+            html += `
+                <tr>
+                    <td>${assignatura}</td>
+                    <td>${trimestreName}</td>
+                    <td>${total}</td>
+                    <td>${naPercent}%</td>
+                    <td>${asPercent}%</td>
+                    <td>${anPercent}%</td>
+                    <td>${aePercent}%</td>
+                    <td class="percentage ${assolitsPercent >= 70 ? 'high' : assolitsPercent >= 50 ? 'medium' : 'low'}">${assolitsPercent}%</td>
+                </tr>
+            `;
+        });
+    });
+    
+    tableBody.innerHTML = html;
+    console.log('✅ Taula comparativa detallada actualitzada');
+}
+
+function toggleComparativaView() {
+    console.log('🔄 Canviant vista de comparativa...');
+    
+    const tableView = document.getElementById('comparativaTableView');
+    const groupedView = document.getElementById('comparativaGroupedView');
+    const toggleBtn = document.getElementById('toggleComparativaView');
+    
+    if (tableView && groupedView && toggleBtn) {
+        if (tableView.style.display === 'none') {
+            // Show table view
+            tableView.style.display = 'block';
+            groupedView.style.display = 'none';
+            toggleBtn.innerHTML = `
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                </svg>
+                Vista Agrupada
+            `;
+            console.log('✅ Vista de taula activada');
+        } else {
+            // Show grouped view
+            tableView.style.display = 'none';
+            groupedView.style.display = 'block';
+            toggleBtn.innerHTML = `
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                </svg>
+                Vista Taula
+            `;
+            actualitzarVistaAgrupada();
+            console.log('✅ Vista agrupada activada');
+        }
+    }
+}
+
+function actualitzarVistaAgrupada() {
+    console.log('📊 Actualitzant vista agrupada...');
+    
+    const content = document.getElementById('comparativaGroupedContent');
+    if (!content) return;
+    
+    if (filteredData.length === 0) {
+        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    let html = '';
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        const totalAssignatura = assignaturaData.length;
+        const assolitsAssignatura = assignaturaData.filter(item => item.assoliment !== 'NA').length;
+        const assolitsPercent = ((assolitsAssignatura / totalAssignatura) * 100).toFixed(1);
+        
+        let trimestresHTML = '';
+        const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+        
+        trimestres.forEach(trimestre => {
+            const trimestreData = assignaturaData.filter(item => item.trimestre === trimestre);
+            if (trimestreData.length === 0) {
+                trimestresHTML += `
+                    <div class="comparativa-trimestre">
+                        <div class="comparativa-trimestre-header">
+                            <h5 class="comparativa-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
+                            <span class="comparativa-trimestre-total">0 avaluacions</span>
+                        </div>
+                        <div class="comparativa-progress-bars">
+                            <div class="text-center" style="color: var(--neutral-500); padding: var(--space-lg);">No hi ha dades</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const total = trimestreData.length;
+            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+            
+            const naPercent = ((na / total) * 100).toFixed(1);
+            const asPercent = ((as / total) * 100).toFixed(1);
+            const anPercent = ((an / total) * 100).toFixed(1);
+            const aePercent = ((ae / total) * 100).toFixed(1);
+            
+            trimestresHTML += `
+                <div class="comparativa-trimestre">
+                    <div class="comparativa-trimestre-header">
+                        <h5 class="comparativa-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
+                        <span class="comparativa-trimestre-total">${total} avaluacions</span>
+                    </div>
+                    <div class="comparativa-progress-bars">
+                        <div class="comparativa-progress-item">
+                            <span class="comparativa-progress-label">NA</span>
+                            <div class="comparativa-progress-bar">
+                                <div class="comparativa-progress-fill na" style="width: ${naPercent}%"></div>
+                            </div>
+                            <span class="comparativa-progress-value">${naPercent}%</span>
+                        </div>
+                        <div class="comparativa-progress-item">
+                            <span class="comparativa-progress-label">AS</span>
+                            <div class="comparativa-progress-bar">
+                                <div class="comparativa-progress-fill as" style="width: ${asPercent}%"></div>
+                            </div>
+                            <span class="comparativa-progress-value">${asPercent}%</span>
+                        </div>
+                        <div class="comparativa-progress-item">
+                            <span class="comparativa-progress-label">AN</span>
+                            <div class="comparativa-progress-bar">
+                                <div class="comparativa-progress-fill an" style="width: ${anPercent}%"></div>
+                            </div>
+                            <span class="comparativa-progress-value">${anPercent}%</span>
+                        </div>
+                        <div class="comparativa-progress-item">
+                            <span class="comparativa-progress-label">AE</span>
+                            <div class="comparativa-progress-bar">
+                                <div class="comparativa-progress-fill ae" style="width: ${aePercent}%"></div>
+                            </div>
+                            <span class="comparativa-progress-value">${aePercent}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+            <div class="comparativa-group">
+                <div class="comparativa-group-header">
+                    <h4 class="comparativa-group-title">${assignatura}</h4>
+                    <div class="comparativa-group-stats">
+                        <div class="comparativa-stat">
+                            <span class="comparativa-stat-label">Total:</span>
+                            <span class="comparativa-stat-value">${totalAssignatura}</span>
+                        </div>
+                        <div class="comparativa-stat">
+                            <span class="comparativa-stat-label">% Assolits:</span>
+                            <span class="comparativa-stat-value">${assolitsPercent}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparativa-trimestres">
+                    ${trimestresHTML}
+                </div>
+            </div>
+        `;
+    });
+    
+    content.innerHTML = html;
+    console.log('✅ Vista agrupada actualitzada');
+}
+
 function exportComparativaAvancada() {
     if (filteredData.length === 0) {
         showStatus('warning', 'No hi ha dades per exportar');
@@ -1305,6 +1655,60 @@ function exportComparativaAvancada() {
     document.body.removeChild(link);
     
     showStatus('success', 'Comparativa avançada exportada correctament');
+}
+
+function exportComparativaDetallada() {
+    console.log('📤 Exportant comparativa detallada...');
+    
+    if (filteredData.length === 0) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    
+    let csvData = 'Assignatura,Trimestre,Total,NA (%),AS (%),AN (%),AE (%),% Assolits\n';
+    
+    assignatures.forEach(assignatura => {
+        trimestres.forEach(trimestre => {
+            const trimestreData = filteredData.filter(item => 
+                item.assignatura === assignatura && item.trimestre === trimestre
+            );
+            
+            if (trimestreData.length === 0) {
+                csvData += `${assignatura},${trimestre},0,0,0,0,0,0\n`;
+                return;
+            }
+            
+            const total = trimestreData.length;
+            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+            
+            const naPercent = ((na / total) * 100).toFixed(1);
+            const asPercent = ((as / total) * 100).toFixed(1);
+            const anPercent = ((an / total) * 100).toFixed(1);
+            const aePercent = ((ae / total) * 100).toFixed(1);
+            const assolitsPercent = (((as + an + ae) / total) * 100).toFixed(1);
+            
+            csvData += `${assignatura},${trimestre},${total},${naPercent},${asPercent},${anPercent},${aePercent},${assolitsPercent}\n`;
+        });
+    });
+    
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'comparativa_detallada.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showStatus('success', 'Comparativa detallada exportada correctament');
+    console.log('✅ Comparativa detallada exportada');
 }
 
 // ===== DATA MANAGEMENT FUNCTIONS =====
