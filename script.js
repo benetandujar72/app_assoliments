@@ -286,18 +286,23 @@ async function uploadCSV(csvData, fileName) {
         showProgressBar();
         updateProgress(10, 'Enviant fitxer al servidor...');
         
-        const response = await fetch('/api/upload', {
+        // Crear FormData per enviar el fitxer
+        const formData = new FormData();
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        formData.append('file', blob, fileName);
+        
+        console.log(`📤 Enviant fitxer: ${fileName} (${csvData.length} caràcters)`);
+        
+        const response = await fetch('/api/upload/csv', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                csvData: csvData,
-                fileName: fileName
-            })
+            body: formData
         });
         
         updateProgress(50, 'Processant dades...');
+        
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+        }
         
         const result = await response.json();
         
@@ -1216,6 +1221,16 @@ function handleActionClick(event) {
             break;
         case 'export-debug':
             exportDebugData();
+            break;
+        case 'file-select':
+            // Simular clic en l'input de fitxer
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.click();
+            } else {
+                console.error('❌ No es troba l\'element fileInput');
+                showStatus('error', 'Error: No es pot accedir al selector de fitxers');
+            }
             break;
         case 'search-student':
             searchStudent();
