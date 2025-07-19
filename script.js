@@ -29,14 +29,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar Chart.js
     initializeChartJS();
     
-    initializeEventListeners();
+    // Inicialitzar event listeners
+    inicialitzarEventListeners();
+    
+    // Inicialitzar menú de debugging
+    inicialitzarMenuDebug();
+    
     initializeScrollEffects();
     initializeMicrointeractions();
     
     // Inicialitzar comparatives
     inicialitzarComparatives();
     
-    // Verificar si hi ha dades existents i carregar-les automàticament
+    // Verificar dades existents
     verificarDadesExistents();
 });
 
@@ -1439,6 +1444,14 @@ function handleActionClick(event) {
         case 'force-tabs':
             forçarVisualitzacióPestanyes();
             showStatus('info', 'Forçant visualització de pestanyes...');
+            break;
+        case 'debug-dom':
+            verificarEstatDOM();
+            showStatus('info', 'Debugging DOM...');
+            break;
+        case 'diagnose-tabs':
+            diagnosticarPestanyesAnalisi();
+            showStatus('info', 'Diagnosticant pestanyes...');
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -3142,6 +3155,131 @@ function forçarVisualitzacióPestanyes() {
     setTimeout(() => {
         verificarPestanyesAnalisi();
     }, 100);
+}
+
+// Inicialitzar menú de debugging
+function inicialitzarMenuDebug() {
+    console.log('🔧 Inicialitzant menú de debugging...');
+    
+    const debugMenuToggle = document.getElementById('debugMenuToggle');
+    const debugMenu = document.querySelector('.debug-menu');
+    const debugDropdown = document.getElementById('debugDropdown');
+    
+    if (debugMenuToggle && debugMenu && debugDropdown) {
+        // Toggle del menú
+        debugMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            debugMenu.classList.toggle('active');
+            console.log('🔧 Menú de debugging toggled');
+        });
+        
+        // Tancar menú quan es clica fora
+        document.addEventListener('click', (e) => {
+            if (!debugMenu.contains(e.target)) {
+                debugMenu.classList.remove('active');
+            }
+        });
+        
+        // Event listeners per als botons de debugging
+        const debugButtons = debugDropdown.querySelectorAll('.debug-btn');
+        debugButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = button.dataset.action;
+                console.log(`🔧 Botó de debugging clicat: ${action}`);
+                handleActionClick(action);
+                
+                // Tancar menú després de clicar
+                setTimeout(() => {
+                    debugMenu.classList.remove('active');
+                }, 100);
+            });
+        });
+        
+        console.log('✅ Menú de debugging inicialitzat');
+    } else {
+        console.error('❌ Elements del menú de debugging no trobats');
+    }
+}
+
+// Funció específica per diagnosticar pestanyes d'anàlisi
+function diagnosticarPestanyesAnalisi() {
+    console.log('🔍 DIAGNÒSTIC COMPLET DE PESTANYES D\'ANÀLISI');
+    console.log('=' .repeat(50));
+    
+    // 1. Verificar elements del DOM
+    const analysisSection = document.querySelector('.analysis-section');
+    const analysisTabs = document.querySelectorAll('.analysis-tab');
+    const analysisPanes = document.querySelectorAll('.analysis-pane');
+    
+    console.log('📋 Elements trobats:', {
+        analysisSection: !!analysisSection,
+        analysisTabs: analysisTabs.length,
+        analysisPanes: analysisPanes.length
+    });
+    
+    // 2. Verificar cada pestanya
+    analysisTabs.forEach((tab, index) => {
+        const tabId = tab.dataset.tab;
+        const isActive = tab.classList.contains('active');
+        const pane = document.getElementById(tabId);
+        const paneActive = pane ? pane.classList.contains('active') : false;
+        const paneVisible = pane ? window.getComputedStyle(pane).display !== 'none' : false;
+        
+        console.log(`📋 Pestanya ${index + 1}:`, {
+            tabId: tabId,
+            tabText: tab.textContent.trim(),
+            tabActive: isActive,
+            paneExists: !!pane,
+            paneActive: paneActive,
+            paneVisible: paneVisible,
+            paneDisplay: pane ? window.getComputedStyle(pane).display : 'N/A',
+            paneOpacity: pane ? window.getComputedStyle(pane).opacity : 'N/A'
+        });
+    });
+    
+    // 3. Verificar estils CSS
+    const activePane = document.querySelector('.analysis-pane.active');
+    if (activePane) {
+        const computedStyle = window.getComputedStyle(activePane);
+        console.log('🎨 Estils del pane actiu:', {
+            display: computedStyle.display,
+            opacity: computedStyle.opacity,
+            visibility: computedStyle.visibility,
+            height: computedStyle.height,
+            width: computedStyle.width,
+            position: computedStyle.position,
+            zIndex: computedStyle.zIndex
+        });
+    }
+    
+    // 4. Verificar si hi ha conflictes CSS
+    const allPanes = document.querySelectorAll('.analysis-pane');
+    const visiblePanes = Array.from(allPanes).filter(pane => {
+        const style = window.getComputedStyle(pane);
+        return style.display !== 'none' && style.opacity !== '0';
+    });
+    
+    console.log('🔍 Panes visibles:', visiblePanes.length);
+    if (visiblePanes.length > 1) {
+        console.warn('⚠️ MÚLTIPLES PANES VISIBLES! Això pot causar problemes.');
+    }
+    
+    // 5. Forçar visualització si cal
+    if (visiblePanes.length === 0) {
+        console.log('🔧 No hi ha panes visibles, forçant visualització...');
+        forçarVisualitzacióPestanyes();
+    }
+    
+    console.log('=' .repeat(50));
+    console.log('🔍 DIAGNÒSTIC COMPLETAT');
+    
+    return {
+        totalTabs: analysisTabs.length,
+        totalPanes: analysisPanes.length,
+        visiblePanes: visiblePanes.length,
+        activePane: !!activePane
+    };
 }
 
  
