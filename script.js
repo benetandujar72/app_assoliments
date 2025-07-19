@@ -309,6 +309,19 @@ async function carregarDadesDelServidor() {
             filteredData = [...currentData];
             
             console.log(`✅ Dades carregades: ${currentData.length} registres`);
+            console.log('📋 Mostra de dades:', currentData.slice(0, 3));
+            
+            // Verificar estructura de dades
+            if (currentData.length > 0) {
+                const primerRegistre = currentData[0];
+                console.log('🔍 Estructura del primer registre:', {
+                    classe: primerRegistre.classe,
+                    estudiant: primerRegistre.estudiant,
+                    assignatura: primerRegistre.assignatura,
+                    trimestre: primerRegistre.trimestre,
+                    assoliment: primerRegistre.assoliment
+                });
+            }
             
             inicialitzarDashboard();
             showStatus('success', `Dades carregades: ${currentData.length} registres`);
@@ -324,6 +337,9 @@ async function carregarDadesDelServidor() {
 
 function inicialitzarDashboard() {
     console.log('🎯 Inicialitzant dashboard...');
+    
+    // Verificar que els elements del DOM existeixen
+    verificarElementsDOM();
     
     // Navigate to dashboard
     navigateToStep('dashboard');
@@ -341,6 +357,40 @@ function inicialitzarDashboard() {
     actualitzarAnalisiSections();
     
     console.log('✅ Dashboard inicialitzat correctament');
+}
+
+function verificarElementsDOM() {
+    console.log('🔍 Verificant elements del DOM...');
+    
+    const elements = {
+        'classeFilter': document.getElementById('classeFilter'),
+        'estudiantFilter': document.getElementById('estudiantFilter'),
+        'assignaturaFilter': document.getElementById('assignaturaFilter'),
+        'trimestreFilter': document.getElementById('trimestreFilter'),
+        'assolimentFilter': document.getElementById('assolimentFilter'),
+        'totalStudents': document.getElementById('totalStudents'),
+        'averagePerformance': document.getElementById('averagePerformance'),
+        'achievementRate': document.getElementById('achievementRate'),
+        'improvement': document.getElementById('improvement'),
+        'assolimentsChart': document.getElementById('assolimentsChart'),
+        'evolucioChart': document.getElementById('evolucioChart'),
+        'assignaturesChart': document.getElementById('assignaturesChart'),
+        'rendimentChart': document.getElementById('rendimentChart'),
+        'comparativaAvancadaContent': document.getElementById('comparativaAvancadaContent'),
+        'assignaturaStatsTable': document.getElementById('assignaturaStatsTable'),
+        'trimestreStatsTable': document.getElementById('trimestreStatsTable'),
+        'comparativaDetalladaTableBody': document.getElementById('comparativaDetalladaTableBody')
+    };
+    
+    Object.entries(elements).forEach(([name, element]) => {
+        if (element) {
+            console.log(`✅ ${name} trobat`);
+        } else {
+            console.log(`❌ ${name} NO trobat`);
+        }
+    });
+    
+    return elements;
 }
 
 function actualitzarOverviewCards() {
@@ -378,15 +428,19 @@ function actualitzarOverviewCards() {
 
 function omplirFiltres() {
     console.log('🔍 Omplint filtres...');
+    console.log('📊 Dades disponibles:', {
+        currentData: currentData.length,
+        filteredData: filteredData.length
+    });
     
-    if (filteredData.length === 0) {
+    if (currentData.length === 0) {
         console.log('⚠️ No hi ha dades per omplir els filtres');
         return;
     }
     
     try {
         // Classes
-        const classes = [...new Set(filteredData.map(item => item.classe))].sort();
+        const classes = [...new Set(currentData.map(item => item.classe))].sort();
         const classeFilter = document.getElementById('classeFilter');
         if (classeFilter) {
             classeFilter.innerHTML = '<option value="">Totes les classes</option>';
@@ -396,11 +450,13 @@ function omplirFiltres() {
                 option.textContent = classe;
                 classeFilter.appendChild(option);
             });
-            console.log(`✅ Filtre de classes omplert: ${classes.length} classes`);
+            console.log(`✅ Filtre de classes omplert: ${classes.length} classes`, classes);
+        } else {
+            console.log('❌ No es troba el filtre de classes');
         }
         
         // Students
-        const students = [...new Set(filteredData.map(item => item.estudiant))].sort();
+        const students = [...new Set(currentData.map(item => item.estudiant))].sort();
         const estudiantFilter = document.getElementById('estudiantFilter');
         if (estudiantFilter) {
             estudiantFilter.innerHTML = '<option value="">Tots els estudiants</option>';
@@ -410,11 +466,13 @@ function omplirFiltres() {
                 option.textContent = estudiant;
                 estudiantFilter.appendChild(option);
             });
-            console.log(`✅ Filtre d'estudiants omplert: ${students.length} estudiants`);
+            console.log(`✅ Filtre d'estudiants omplert: ${students.length} estudiants`, students.slice(0, 5));
+        } else {
+            console.log('❌ No es troba el filtre d\'estudiants');
         }
         
         // Subjects
-        const subjects = [...new Set(filteredData.map(item => item.assignatura))].sort();
+        const subjects = [...new Set(currentData.map(item => item.assignatura))].sort();
         const assignaturaFilter = document.getElementById('assignaturaFilter');
         if (assignaturaFilter) {
             assignaturaFilter.innerHTML = '<option value="">Totes les assignatures</option>';
@@ -424,7 +482,9 @@ function omplirFiltres() {
                 option.textContent = assignatura;
                 assignaturaFilter.appendChild(option);
             });
-            console.log(`✅ Filtre d'assignatures omplert: ${subjects.length} assignatures`);
+            console.log(`✅ Filtre d'assignatures omplert: ${subjects.length} assignatures`, subjects);
+        } else {
+            console.log('❌ No es troba el filtre d\'assignatures');
         }
         
         // Trimestres (ja estan definits al HTML)
@@ -478,12 +538,12 @@ function actualitzarFiltreEstudiants(classeSeleccionada) {
     let estudiantsFiltrats;
     if (classeSeleccionada) {
         estudiantsFiltrats = [...new Set(
-            filteredData
+            currentData
                 .filter(item => item.classe === classeSeleccionada)
                 .map(item => item.estudiant)
         )].sort();
     } else {
-        estudiantsFiltrats = [...new Set(filteredData.map(item => item.estudiant))].sort();
+        estudiantsFiltrats = [...new Set(currentData.map(item => item.estudiant))].sort();
     }
     
     // Actualitzar opcions
@@ -511,12 +571,12 @@ function actualitzarFiltreAssignatures(estudiantSeleccionat) {
     let assignaturesFiltrats;
     if (estudiantSeleccionat) {
         assignaturesFiltrats = [...new Set(
-            filteredData
+            currentData
                 .filter(item => item.estudiant === estudiantSeleccionat)
                 .map(item => item.assignatura)
         )].sort();
     } else {
-        assignaturesFiltrats = [...new Set(filteredData.map(item => item.assignatura))].sort();
+        assignaturesFiltrats = [...new Set(currentData.map(item => item.assignatura))].sort();
     }
     
     // Actualitzar opcions
