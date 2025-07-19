@@ -1365,6 +1365,12 @@ function handleActionClick(event) {
         return;
     }
     
+    // Ignorar clics en el menú de debugging
+    if (event.target.closest('.debug-menu') || event.target.closest('.debug-btn')) {
+        console.log('🔧 Ignorant clic en menú de debugging');
+        return;
+    }
+    
     const actionElement = event.target.closest('[data-action]');
     if (!actionElement) {
         console.log('🔍 No es troba element amb data-action');
