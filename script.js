@@ -1138,26 +1138,58 @@ function handleAnalysisTabClick(event) {
 function showAnalysisTab(tabId) {
     console.log(`📑 Canviant a pestanya: ${tabId}`);
     
-    // Remove active class from all tabs and panes
-    document.querySelectorAll('.analysis-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.analysis-pane').forEach(pane => {
-        pane.classList.remove('active');
-    });
-    
-    // Add active class to selected tab and pane
-    const selectedTab = document.querySelector(`[data-tab="${tabId}"]`);
-    const selectedPane = document.getElementById(tabId);
-    
-    if (selectedTab && selectedPane) {
-        selectedTab.classList.add('active');
-        selectedPane.classList.add('active');
+    try {
+        // Remove active class from all tabs and panes
+        const allTabs = document.querySelectorAll('.analysis-tab');
+        const allPanes = document.querySelectorAll('.analysis-pane');
         
-        // Load content if needed
-        if (tabId === 'individual') {
-            loadIndividualContent();
+        console.log('🔍 Elements trobats:', {
+            allTabs: allTabs.length,
+            allPanes: allPanes.length
+        });
+        
+        allTabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        allPanes.forEach(pane => {
+            pane.classList.remove('active');
+        });
+        
+        // Add active class to selected tab and pane
+        const selectedTab = document.querySelector(`[data-tab="${tabId}"]`);
+        const selectedPane = document.getElementById(tabId);
+        
+        console.log('🔍 Elements seleccionats:', {
+            selectedTab: !!selectedTab,
+            selectedPane: !!selectedPane,
+            tabId: tabId
+        });
+        
+        if (selectedTab && selectedPane) {
+            selectedTab.classList.add('active');
+            selectedPane.classList.add('active');
+            
+            console.log('✅ Classes active afegides');
+            
+            // Load content if needed
+            if (tabId === 'individual') {
+                console.log('📋 Carregant contingut individual...');
+                loadIndividualContent();
+            }
+            
+            console.log(`✅ Pestanya ${tabId} activada correctament`);
+        } else {
+            console.error('❌ Elements de pestanya no trobats:', {
+                selectedTab: !!selectedTab,
+                selectedPane: !!selectedPane,
+                tabId: tabId
+            });
         }
+        
+    } catch (error) {
+        console.error('❌ Error en showAnalysisTab:', error);
+        console.error('❌ Stack trace:', error.stack);
+        throw error;
     }
 }
 
@@ -1334,6 +1366,10 @@ function handleActionClick(event) {
             verificarIOpacityDashboard();
             showStatus('info', 'Verificant i corregint opacity...');
             break;
+        case 'verify-data':
+            verificarDadesDetallades();
+            showStatus('info', 'Verificant dades detallades...');
+            break;
         case 'file-select':
             // Simular clic en l'input de fitxer
             const fileInput = document.getElementById('fileInput');
@@ -1392,9 +1428,68 @@ function refreshData() {
 }
 
 function showFullAnalysis() {
+    console.log('🔍 Executant showFullAnalysis...');
     showStatus('info', 'Obrint anàlisi complet...');
-    // Navigate to comparative tab
-    showAnalysisTab('comparatives');
+    
+    try {
+        // Verificar que els elements existeixen
+        const comparativesTab = document.querySelector('[data-tab="comparatives"]');
+        const comparativesPane = document.getElementById('comparatives');
+        
+        console.log('🔍 Elements trobats:', {
+            comparativesTab: !!comparativesTab,
+            comparativesPane: !!comparativesPane
+        });
+        
+        if (!comparativesTab || !comparativesPane) {
+            console.error('❌ Elements de comparatives no trobats');
+            showStatus('error', 'Error: Elements d\'anàlisi no trobats');
+            return;
+        }
+        
+        // Verificar que tenim dades
+        console.log('📊 Dades disponibles:', {
+            currentData: currentData.length,
+            filteredData: filteredData.length
+        });
+        
+        // Verificar dades detallades
+        verificarDadesDetallades();
+        
+        if (filteredData.length === 0) {
+            console.warn('⚠️ No hi ha dades per mostrar anàlisi');
+            showStatus('warning', 'No hi ha dades disponibles per anàlisi');
+            return;
+        }
+        
+        // Navigate to comparative tab
+        console.log('📑 Canviant a pestanya comparatives...');
+        showAnalysisTab('comparatives');
+        
+        // Verificar que el canvi s'ha fet
+        setTimeout(() => {
+            const isActive = comparativesTab.classList.contains('active');
+            const isPaneActive = comparativesPane.classList.contains('active');
+            
+            console.log('🔍 Estat després del canvi:', {
+                tabActive: isActive,
+                paneActive: isPaneActive
+            });
+            
+            if (isActive && isPaneActive) {
+                console.log('✅ Pestanya comparatives activada correctament');
+                showStatus('success', 'Anàlisi complet obert');
+            } else {
+                console.error('❌ Pestanya comparatives no s\'ha activat');
+                showStatus('error', 'Error activant anàlisi complet');
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Error en showFullAnalysis:', error);
+        console.error('❌ Stack trace:', error.stack);
+        showStatus('error', 'Error obrint anàlisi complet: ' + error.message);
+    }
 }
 
 function saveFilter() {
@@ -2721,6 +2816,51 @@ function verificarIOpacityDashboard() {
         }
     }
     return false;
+}
+
+// Funció per verificar i mostrar informació detallada de les dades
+function verificarDadesDetallades() {
+    console.log('🔍 Verificant dades detallades...');
+    
+    const info = {
+        currentData: {
+            total: currentData.length,
+            mostra: currentData.slice(0, 3),
+            classes: [...new Set(currentData.map(item => item.classe))],
+            estudiants: [...new Set(currentData.map(item => item.estudiant))],
+            assignatures: [...new Set(currentData.map(item => item.assignatura))],
+            trimestres: [...new Set(currentData.map(item => item.trimestre))],
+            assoliments: [...new Set(currentData.map(item => item.assoliment))]
+        },
+        filteredData: {
+            total: filteredData.length,
+            mostra: filteredData.slice(0, 3)
+        }
+    };
+    
+    console.log('📊 Informació detallada de dades:', info);
+    
+    // Verificar si hi ha dades duplicades o problemes
+    const registresUnics = new Set(currentData.map(item => 
+        `${item.classe}-${item.estudiant}-${item.assignatura}-${item.trimestre}`
+    ));
+    
+    console.log('🔍 Anàlisi de duplicats:', {
+        totalRegistres: currentData.length,
+        registresUnics: registresUnics.size,
+        duplicats: currentData.length - registresUnics.size
+    });
+    
+    // Verificar dades amb valors null/undefined
+    const registresAmbProblemes = currentData.filter(item => 
+        !item.estudiant || !item.assignatura || !item.classe || !item.trimestre || !item.assoliment
+    );
+    
+    if (registresAmbProblemes.length > 0) {
+        console.warn('⚠️ Registres amb problemes:', registresAmbProblemes.slice(0, 5));
+    }
+    
+    return info;
 }
 
  
