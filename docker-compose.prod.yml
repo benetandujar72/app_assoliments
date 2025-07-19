@@ -23,6 +23,27 @@ services:
       timeout: 10s
       retries: 3
 
+  # Migració de base de dades (executa una vegada)
+  migrate:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: dashboard-migrate-prod
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-dashboard_assoliments}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dashboard-network-prod
+    command: ["node", "scripts/docker-migrate.js"]
+    restart: "no"
+
   # Aplicació Node.js per producció
   app:
     build: 
@@ -44,6 +65,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - dashboard-network-prod
     restart: unless-stopped

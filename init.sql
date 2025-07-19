@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS estudiants (
 
 CREATE TABLE IF NOT EXISTS assignatures (
     id SERIAL PRIMARY KEY,
+    codi VARCHAR(10) NOT NULL UNIQUE,
     nom VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -33,13 +34,13 @@ CREATE INDEX IF NOT EXISTS idx_assoliments_trimestre ON assoliments(trimestre);
 CREATE INDEX IF NOT EXISTS idx_assoliments_assoliment ON assoliments(assoliment);
 
 -- Inserir assignatures per defecte
-INSERT INTO assignatures (nom) VALUES 
-    ('Català'),
-    ('Anglès'),
-    ('Francès'),
-    ('Matemàtiques'),
-    ('Música'),
-    ('Espai Creatiu'),
-    ('Educació Física'),
-    ('Espai Globalitzat')
-ON CONFLICT (nom) DO NOTHING; 
+INSERT INTO assignatures (codi, nom) VALUES 
+    ('LIN', 'Català'),
+    ('ANG', 'Anglès'),
+    ('FRA', 'Francès'),
+    ('MAT', 'Matemàtiques'),
+    ('MUS', 'Música'),
+    ('EC', 'Espai Creatiu'),
+    ('FIS', 'Educació Física'),
+    ('EG', 'Espai Globalitzat')
+ON CONFLICT (codi) DO NOTHING; 

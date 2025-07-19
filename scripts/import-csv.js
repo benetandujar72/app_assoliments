@@ -3,7 +3,7 @@ const csv = require('csv-parser');
 const { query } = require('../database/db.js');
 
 const assignatures = {
-    'LIN': { nom: 'Llengua', cols: [2, 3, 4, 5] },
+    'LIN': { nom: 'Català', cols: [2, 3, 4, 5] },
     'ANG': { nom: 'Anglès', cols: [6, 7, 8, 9] },
     'FRA': { nom: 'Francès', cols: [10, 11, 12, 13] },
     'MAT': { nom: 'Matemàtiques', cols: [14, 15, 16, 17] },

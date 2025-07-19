@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeScrollEffects();
     initializeMicrointeractions();
     
+    // Inicialitzar comparatives
+    inicialitzarComparatives();
+    
     // Verificar si hi ha dades existents i carregar-les automàticament
     verificarDadesExistents();
 });
@@ -1574,3 +1577,782 @@ function crearGraficEvolucioIndividual() {
         }
     });
 } 
+
+// ===== FUNCIONALITATS DE COMPARATIVES ESTADÍSTIQUES =====
+
+// Inicialitzar funcionalitats de comparatives
+function inicialitzarComparatives() {
+    console.log('📊 Inicialitzant funcionalitats de comparatives...');
+    
+    // Event listeners per comparatives
+    document.getElementById('generarComparativa').addEventListener('click', generarComparativa);
+    document.getElementById('exportarComparativa').addEventListener('click', exportarComparativa);
+    
+    // Carregar opcions dels filtres de comparatives
+    carregarOpcionsComparatives();
+}
+
+// Carregar opcions dels filtres de comparatives
+async function carregarOpcionsComparatives() {
+    try {
+        // Carregar classes
+        const classesResponse = await fetch('/api/estudiants');
+        const classesData = await classesResponse.json();
+        if (classesData.success) {
+            const classes = [...new Set(classesData.data.map(e => e.classe))];
+            const classeSelect = document.getElementById('comparativaClasse');
+            classeSelect.innerHTML = '<option value="">Totes les classes</option>';
+            classes.forEach(classe => {
+                classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+            });
+        }
+        
+        // Carregar assignatures
+        const assignaturesResponse = await fetch('/api/assignatures');
+        const assignaturesData = await assignaturesResponse.json();
+        if (assignaturesData.success) {
+            const assignaturaSelect = document.getElementById('comparativaAssignatura');
+            assignaturaSelect.innerHTML = '<option value="">Totes les assignatures</option>';
+            assignaturesData.data.forEach(ass => {
+                assignaturaSelect.innerHTML += `<option value="${ass.codi}">${ass.nom}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error carregant opcions de comparatives:', error);
+    }
+}
+
+// Generar comparativa segons el tipus seleccionat
+async function generarComparativa() {
+    const tipus = document.getElementById('comparativaType').value;
+    const classe = document.getElementById('comparativaClasse').value;
+    const assignatura = document.getElementById('comparativaAssignatura').value;
+    const trimestre = document.getElementById('comparativaTrimestre').value;
+    
+    if (!tipus) {
+        showStatus('warning', 'Si us plau, selecciona un tipus de comparativa');
+        return;
+    }
+    
+    showStatus('info', 'Generant comparativa...');
+    
+    try {
+        let url = `/api/estadistiques/comparativa/${tipus}?`;
+        const params = new URLSearchParams();
+        
+        if (classe) params.append('classe', classe);
+        if (assignatura) params.append('assignatura', assignatura);
+        if (trimestre) params.append('trimestre', trimestre);
+        
+        url += params.toString();
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarComparativa(tipus, result.data);
+            showStatus('success', 'Comparativa generada correctament');
+        } else {
+            showStatus('error', 'Error generant la comparativa: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error generant comparativa:', error);
+        showStatus('error', 'Error de connexió generant la comparativa');
+    }
+}
+
+// Mostrar comparativa segons el tipus
+function mostrarComparativa(tipus, data) {
+    console.log(`📊 Mostrant comparativa de tipus: ${tipus}`, data);
+    
+    switch (tipus) {
+        case 'materies':
+            mostrarComparativaMateries(data);
+            break;
+        case 'grups':
+            mostrarComparativaGrups(data);
+            break;
+        case 'temporal':
+            mostrarComparativaTemporal(data);
+            break;
+        case 'multidimensional':
+            mostrarComparativaMultidimensional(data);
+            break;
+        case 'correlacions':
+            mostrarComparativaCorrelacions(data);
+            break;
+        case 'variancia':
+            mostrarComparativaVariancia(data);
+            break;
+        default:
+            showStatus('error', 'Tipus de comparativa no reconegut');
+    }
+}
+
+// Comparativa entre materies
+function mostrarComparativaMateries(data) {
+    // Gràfic principal
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.nom),
+            datasets: [{
+                label: 'Mitjana',
+                data: data.map(item => parseFloat(item.mitjana) || 0),
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2
+            }, {
+                label: '% Èxit',
+                data: data.map(item => parseFloat(item.percentatge_exit) || 0),
+                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 2,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Mitjana'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: '% Èxit'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Comparativa de Rendiment per Materia'
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'radar',
+        data: {
+            labels: data.map(item => item.nom),
+            datasets: [{
+                label: 'Mitjana',
+                data: data.map(item => parseFloat(item.mitjana) || 0),
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+            }, {
+                label: '% Èxit',
+                data: data.map(item => parseFloat(item.percentatge_exit) || 0),
+                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(34, 197, 94, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Anàlisi Detallada per Materia'
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    actualitzarTaulaComparativa(data.map(item => ({
+        metrica: item.nom,
+        valor: `${parseFloat(item.mitjana || 0).toFixed(2)}`,
+        comparacio: `${parseFloat(item.percentatge_exit || 0).toFixed(1)}% èxit`,
+        significancia: parseFloat(item.percentatge_exit || 0) >= 80 ? 'Alta' : 
+                      parseFloat(item.percentatge_exit || 0) >= 60 ? 'Mitjana' : 'Baixa'
+    })));
+}
+
+// Comparativa entre grups
+function mostrarComparativaGrups(data) {
+    // Gràfic principal
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.classe),
+            datasets: [{
+                label: 'Mitjana',
+                data: data.map(item => parseFloat(item.mitjana) || 0),
+                backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                borderColor: 'rgba(168, 85, 247, 1)',
+                borderWidth: 2
+            }, {
+                label: 'Desviació Estàndard',
+                data: data.map(item => parseFloat(item.desviacio_estandard) || 0),
+                backgroundColor: 'rgba(251, 146, 60, 0.8)',
+                borderColor: 'rgba(251, 146, 60, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Comparativa de Rendiment per Grup'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(item => item.classe),
+            datasets: [{
+                data: data.map(item => parseInt(item.total_estudiants) || 0),
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(168, 85, 247, 0.8)',
+                    'rgba(34, 197, 94, 0.8)',
+                    'rgba(251, 146, 60, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribució d\'Estudiants per Grup'
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    actualitzarTaulaComparativa(data.map(item => ({
+        metrica: item.classe,
+        valor: `${parseFloat(item.mitjana || 0).toFixed(2)}`,
+        comparacio: `${parseFloat(item.percentatge_exit || 0).toFixed(1)}% èxit`,
+        significancia: parseFloat(item.percentatge_exit || 0) >= 80 ? 'Alta' : 
+                      parseFloat(item.percentatge_exit || 0) >= 60 ? 'Mitjana' : 'Baixa'
+    })));
+}
+
+// Comparativa temporal
+function mostrarComparativaTemporal(data) {
+    // Gràfic principal
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(item => item.trimestre),
+            datasets: [{
+                label: 'Mitjana',
+                data: data.map(item => parseFloat(item.mitjana) || 0),
+                borderColor: 'rgba(59, 130, 246, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true
+            }, {
+                label: '% Èxit',
+                data: data.map(item => parseFloat(item.percentatge_exit) || 0),
+                borderColor: 'rgba(34, 197, 94, 1)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Mitjana'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: '% Èxit'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Evolució Temporal del Rendiment'
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.trimestre),
+            datasets: [{
+                label: 'Excel·lents',
+                data: data.map(item => parseInt(item.excelents) || 0),
+                backgroundColor: 'rgba(34, 197, 94, 0.8)'
+            }, {
+                label: 'Notables',
+                data: data.map(item => parseInt(item.notables) || 0),
+                backgroundColor: 'rgba(59, 130, 246, 0.8)'
+            }, {
+                label: 'Suficients',
+                data: data.map(item => parseInt(item.suficients) || 0),
+                backgroundColor: 'rgba(251, 146, 60, 0.8)'
+            }, {
+                label: 'No Assolits',
+                data: data.map(item => parseInt(item.no_assoliments) || 0),
+                backgroundColor: 'rgba(239, 68, 68, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribució d\'Assoliments per Trimestre'
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                },
+                y: {
+                    stacked: true
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    actualitzarTaulaComparativa(data.map(item => ({
+        metrica: item.trimestre,
+        valor: `${parseFloat(item.mitjana || 0).toFixed(2)}`,
+        comparacio: `${parseFloat(item.percentatge_exit || 0).toFixed(1)}% èxit`,
+        significancia: parseFloat(item.percentatge_exit || 0) >= 80 ? 'Alta' : 
+                      parseFloat(item.percentatge_exit || 0) >= 60 ? 'Mitjana' : 'Baixa'
+    })));
+}
+
+// Comparativa multidimensional
+function mostrarComparativaMultidimensional(data) {
+    // Crear heatmap
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    // Agrupar dades per assignatura i classe
+    const assignatures = [...new Set(data.map(item => item.assignatura_nom))];
+    const classes = [...new Set(data.map(item => item.classe))];
+    
+    const heatmapData = assignatures.map(ass => {
+        return classes.map(classe => {
+            const item = data.find(d => d.assignatura_nom === ass && d.classe === classe);
+            return item ? parseFloat(item.mitjana) || 0 : 0;
+        });
+    });
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: assignatures,
+            datasets: classes.map((classe, index) => ({
+                label: classe,
+                data: heatmapData.map(row => row[index]),
+                backgroundColor: `hsl(${index * 60}, 70%, 60%)`,
+                borderColor: `hsl(${index * 60}, 70%, 40%)`,
+                borderWidth: 1
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Comparativa Multidimensional: Assignatura vs Classe'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'scatter',
+        data: {
+            datasets: classes.map((classe, index) => ({
+                label: classe,
+                data: data.filter(item => item.classe === classe).map(item => ({
+                    x: parseFloat(item.mitjana) || 0,
+                    y: parseFloat(item.percentatge_exit) || 0
+                })),
+                backgroundColor: `hsl(${index * 60}, 70%, 60%)`,
+                borderColor: `hsl(${index * 60}, 70%, 40%)`
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Correlació: Mitjana vs % Èxit per Classe'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mitjana'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: '% Èxit'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    actualitzarTaulaComparativa(data.map(item => ({
+        metrica: `${item.assignatura_nom} - ${item.classe}`,
+        valor: `${parseFloat(item.mitjana || 0).toFixed(2)}`,
+        comparacio: `${parseFloat(item.percentatge_exit || 0).toFixed(1)}% èxit`,
+        significancia: parseFloat(item.percentatge_exit || 0) >= 80 ? 'Alta' : 
+                      parseFloat(item.percentatge_exit || 0) >= 60 ? 'Mitjana' : 'Baixa'
+    })));
+}
+
+// Comparativa de correlacions
+function mostrarComparativaCorrelacions(data) {
+    // Gràfic principal - Matriu de correlacions
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    const assignatures = [...new Set([...data.map(item => item.assignatura1), ...data.map(item => item.assignatura2)])];
+    const correlacioMatrix = assignatures.map(ass1 => 
+        assignatures.map(ass2 => {
+            if (ass1 === ass2) return 1;
+            const item = data.find(d => 
+                (d.assignatura1 === ass1 && d.assignatura2 === ass2) ||
+                (d.assignatura1 === ass2 && d.assignatura2 === ass1)
+            );
+            return item ? Math.abs(parseFloat(item.correlacio)) : 0;
+        })
+    );
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: assignatures,
+            datasets: assignatures.map((ass, index) => ({
+                label: ass,
+                data: correlacioMatrix[index],
+                backgroundColor: `hsla(${index * 45}, 70%, 60%, 0.8)`,
+                borderColor: `hsla(${index * 45}, 70%, 40%, 1)`,
+                borderWidth: 1
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Matriu de Correlacions entre Materies'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => `${item.assignatura1} ↔ ${item.assignatura2}`),
+            datasets: [{
+                label: 'Correlació',
+                data: data.map(item => parseFloat(item.correlacio) || 0),
+                backgroundColor: data.map(item => {
+                    const corr = parseFloat(item.correlacio) || 0;
+                    return corr > 0.7 ? 'rgba(34, 197, 94, 0.8)' :
+                           corr > 0.4 ? 'rgba(251, 146, 60, 0.8)' :
+                           'rgba(239, 68, 68, 0.8)';
+                }),
+                borderColor: data.map(item => {
+                    const corr = parseFloat(item.correlacio) || 0;
+                    return corr > 0.7 ? 'rgba(34, 197, 94, 1)' :
+                           corr > 0.4 ? 'rgba(251, 146, 60, 1)' :
+                           'rgba(239, 68, 68, 1)';
+                }),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Correlacions entre Parells de Materies'
+                }
+            },
+            scales: {
+                y: {
+                    min: -1,
+                    max: 1
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    actualitzarTaulaComparativa(data.map(item => ({
+        metrica: `${item.assignatura1} ↔ ${item.assignatura2}`,
+        valor: `${(parseFloat(item.correlacio) || 0).toFixed(3)}`,
+        comparacio: `${parseInt(item.estudiants_comuns)} estudiants`,
+        significancia: Math.abs(parseFloat(item.correlacio) || 0) > 0.7 ? 'Alta' : 
+                      Math.abs(parseFloat(item.correlacio) || 0) > 0.4 ? 'Mitjana' : 'Baixa'
+    })));
+}
+
+// Comparativa d'anàlisi de variància
+function mostrarComparativaVariancia(data) {
+    const grups = data.grups;
+    const estadistics = data.estadistics;
+    
+    // Gràfic principal
+    const ctx = document.getElementById('comparativaChart').getContext('2d');
+    if (charts.comparativaChart) charts.comparativaChart.destroy();
+    
+    charts.comparativaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: grups.map(item => item.classe),
+            datasets: [{
+                label: 'Mitjana',
+                data: grups.map(item => parseFloat(item.mitjana) || 0),
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2
+            }, {
+                label: 'Desviació Estàndard',
+                data: grups.map(item => parseFloat(item.desviacio_estandard) || 0),
+                backgroundColor: 'rgba(251, 146, 60, 0.8)',
+                borderColor: 'rgba(251, 146, 60, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Anàlisi de Variància per Grup'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Gràfic detallat
+    const ctx2 = document.getElementById('analisiDetalladaChart').getContext('2d');
+    if (charts.analisiDetalladaChart) charts.analisiDetalladaChart.destroy();
+    
+    charts.analisiDetalladaChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Variància entre grups', 'Variància dins grups'],
+            datasets: [{
+                data: [estadistics.ssb, estadistics.ssw],
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(168, 85, 247, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Descomposició de la Variància'
+                }
+            }
+        }
+    });
+    
+    // Taula de resultats
+    const taulaData = [
+        {
+            metrica: 'Estadístic F',
+            valor: estadistics.f_statistic.toFixed(3),
+            comparacio: estadistics.significancia,
+            significancia: estadistics.f_statistic > 3.0 ? 'Significativa' : 'No significativa'
+        },
+        {
+            metrica: 'R² (Coeficient de determinació)',
+            valor: (estadistics.r_squared * 100).toFixed(1) + '%',
+            comparacio: `${estadistics.total_observacions} observacions`,
+            significancia: estadistics.r_squared > 0.3 ? 'Alta' : 
+                          estadistics.r_squared > 0.1 ? 'Mitjana' : 'Baixa'
+        },
+        {
+            metrica: 'Mitjana Global',
+            valor: estadistics.mitjana_global.toFixed(2),
+            comparacio: `${estadistics.nombre_grups} grups`,
+            significancia: 'Referència'
+        }
+    ];
+    
+    actualitzarTaulaComparativa(taulaData);
+}
+
+// Actualitzar taula de comparativa
+function actualitzarTaulaComparativa(data) {
+    const tbody = document.getElementById('comparativaTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = data.map(item => `
+        <tr>
+            <td>${item.metrica}</td>
+            <td>${item.valor}</td>
+            <td>${item.comparacio}</td>
+            <td>
+                <span class="percentage ${item.significancia === 'Alta' ? 'high' : 
+                                         item.significancia === 'Mitjana' ? 'medium' : 
+                                         item.significancia === 'Baixa' ? 'low' : ''}">
+                    ${item.significancia}
+                </span>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Exportar comparativa
+function exportarComparativa() {
+    const tipus = document.getElementById('comparativaType').value;
+    if (!tipus) {
+        showStatus('warning', 'Si us plau, genera una comparativa abans d\'exportar');
+        return;
+    }
+    
+    // Crear CSV amb les dades de la comparativa
+    const tbody = document.getElementById('comparativaTableBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    const csvData = [
+        ['Comparativa Estadística', tipus],
+        [''],
+        ['Mètrica', 'Valor', 'Comparació', 'Significància']
+    ];
+    
+    rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        if (cells.length === 4) {
+            csvData.push([
+                cells[0].textContent,
+                cells[1].textContent,
+                cells[2].textContent,
+                cells[3].textContent
+            ]);
+        }
+    });
+    
+    const csv = csvData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    downloadCSV(csv, `comparativa_${tipus}_${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('success', 'Comparativa exportada correctament');
+}
+
+ 

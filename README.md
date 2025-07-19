@@ -6,12 +6,14 @@ Una aplicació web per a l'anàlisi i visualització d'assoliments acadèmics d'
 
 - **Càrrega de dades CSV**: Importació automàtica de fitxers CSV amb dades d'assoliments
 - **Dashboard interactiu**: Visualitzacions gràfiques i estadístiques en temps real
+- **Sistema de Comparatives Estadístiques**: Anàlisi avançada amb 6 tipus de comparatives
 - **Filtres avançats**: Filtrat per grup, alumne, assignatura, trimestre i nivell d'assoliment
 - **Múltiples vistes**: Pestanyes per a diferents tipus d'anàlisi
 - **Exportació de dades**: Exportació de dades filtrades en format CSV
 - **Disseny responsive**: Interfície adaptada per a diferents dispositius
 - **Base de dades PostgreSQL**: Almacenament persistent de dades
-- **Desplegament en Render**: Configuració per a producció
+- **Desplegament automàtic**: Actualització automàtica de la base de dades en producció
+- **Desplegament en Render**: Configuració per a producció amb migracions automàtiques
 
 ## 📋 Requisits
 
@@ -63,6 +65,11 @@ L'aplicació està configurada per a desplegament automàtic en Render amb la ba
 - **Base de dades**: `assoliments_db`
 - **Usuari**: `assoliments_db_user`
 
+**Actualització automàtica:**
+- ✅ **Migracions automàtiques**: La base de dades s'actualitza automàticament en cada desplegament
+- ✅ **Compatibilitat**: Les dades existents es mantenen i s'actualitzen amb les noves funcionalitats
+- ✅ **Verificació**: Es verifica que les comparatives funcionen correctament abans de finalitzar el desplegament
+
 ## 🔄 Alternança entre Entorns
 
 ### Desenvolupament → Producció
@@ -80,6 +87,30 @@ npm start
 ### Verificar Connexió de Producció
 ```bash
 node test-prod-db.js
+```
+
+### Desplegament Automàtic
+```bash
+# Desplegament general
+npm run deploy
+
+# Desplegament específic per Render
+npm run deploy:render
+
+# Desplegament específic per Docker
+npm run deploy:docker
+```
+
+### Scripts de Migració
+```bash
+# Actualitzar base de dades per comparatives
+npm run update-db
+
+# Provar funcionalitats de comparatives
+npm run test-comparatives
+
+# Migració específica per Docker
+npm run docker-migrate
 ```
 
 ## 🐳 Execució amb Docker
@@ -133,6 +164,7 @@ CLASSE,NOM,LIN_1,LIN_2,LIN_3,LIN_FINAL,ANG_1,ANG_2,ANG_3,ANG_FINAL,...
 - **Assignatures**: Rendiment per assignatura
 - **Grups**: Comparativa entre grups de classe
 - **Individual**: Anàlisi individual d'alumnes
+- **Comparatives**: Sistema avançat de comparatives estadístiques
 - **Taula Detallada**: Vista tabular amb tots els registres
 
 ### 4. Filtres
@@ -171,7 +203,16 @@ grafica-assoliments/
 ├── Dockerfile              # Configuració Docker
 ├── docker-compose.yml      # Docker Compose per desenvolupament
 ├── docker-compose.prod.yml # Docker Compose per producció
-└── README.md              # Aquesta documentació
+├── routes/                 # Rutes de l'API
+│   ├── estadistiques.js    # Rutes de comparatives estadístiques
+│   ├── assignatures.js     # Rutes d'assignatures
+│   ├── estudiants.js       # Rutes d'estudiants
+│   └── upload.js           # Rutes de càrrega
+├── scripts/                # Scripts d'utilitat
+│   ├── import-csv.js       # Importació de CSV
+│   └── update-database.js  # Actualització de base de dades
+├── README.md              # Aquesta documentació
+└── README-Comparatives.md # Documentació de comparatives
 ```
 
 ## 🐛 Solució de problemes
@@ -195,6 +236,34 @@ grafica-assoliments/
 - Verifica que les credencials són correctes
 - Comprova que la base de dades està accessible
 - En producció, verifica que SSL està configurat correctament
+
+## 📊 Sistema de Comparatives Estadístiques
+
+El sistema inclou un mòdul avançat de comparatives estadístiques amb les següents funcionalitats:
+
+### Tipus de Comparatives Disponibles
+1. **Comparativa entre Materies**: Ranking de rendiment per assignatura
+2. **Comparativa entre Grups**: Anàlisi comparatiu entre classes
+3. **Comparativa Temporal**: Evolució del rendiment al llarg del temps
+4. **Comparativa Multidimensional**: Anàlisi combinant múltiples factors
+5. **Anàlisi de Correlacions**: Relacions entre diferents variables
+6. **Anàlisi de Variància**: Tests estadístics de significància
+
+### Característiques del Sistema
+- **Filtres avançats**: Per classe, assignatura i trimestre
+- **Visualitzacions interactives**: Gràfics de barres, línies, radar, dispersió
+- **Mètriques estadístiques**: Correlacions, ANOVA, coeficients de determinació
+- **Exportació de resultats**: CSV amb timestamp
+- **Interfície intuïtiva**: Fàcil selecció de tipus de comparativa
+
+### Accés a les Comparatives
+1. Carrega les dades CSV al sistema
+2. Navega a la pestaña "Comparatives"
+3. Selecciona el tipus de comparativa desitjat
+4. Configura els filtres opcionals
+5. Fes clic a "Generar Comparativa"
+
+Per més informació detallada, consulta [README-Comparatives.md](README-Comparatives.md).
 
 ## 📝 Notes tècniques
 

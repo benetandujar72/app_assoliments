@@ -12,6 +12,16 @@
     "init-db": "node scripts/init-database-postgres.js",
     "test-db": "node test-prod-db.js",
     "debug-env": "node debug-env.js",
+    "update-db": "node scripts/update-database.js",
+    "test-comparatives": "node scripts/test-comparatives.js",
+    "import-csv": "node scripts/import-csv.js",
+    "docker-migrate": "node scripts/docker-migrate.js",
+    "docker-build": "docker-compose -f docker-compose.prod.yml build",
+    "docker-up": "docker-compose -f docker-compose.prod.yml up -d",
+    "docker-down": "docker-compose -f docker-compose.prod.yml down",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:render": "RENDER=true bash scripts/deploy.sh",
+    "deploy:docker": "DOCKER_ENV=true bash scripts/deploy.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

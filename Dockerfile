@@ -19,10 +19,12 @@ EXPOSE 3000
 # Variable d'entorn per al port
 ENV PORT=3000
 
-# Crear script de inicialización
+# Crear script de inicialización amb actualització automàtica
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "🔌 Verificant connexió a la base de dades..."' >> /app/start.sh && \
     echo 'node -e "const { Pool } = require(\"pg\"); const pool = new Pool(); pool.query(\"SELECT 1\").then(() => { console.log(\"✅ Base de dades connectada\"); process.exit(0); }).catch(() => { console.log(\"⚠️  Base de dades no disponible, continuant...\"); process.exit(0); });"' >> /app/start.sh && \
+    echo 'echo "🔄 Actualitzant base de dades per comparatives..."' >> /app/start.sh && \
+    echo 'node scripts/docker-migrate.js || echo "⚠️ Error actualitzant BD, continuant..."' >> /app/start.sh && \
     echo 'echo "🚀 Iniciant aplicació..."' >> /app/start.sh && \
     echo 'npm start' >> /app/start.sh && \
     chmod +x /app/start.sh
