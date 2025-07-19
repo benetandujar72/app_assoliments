@@ -382,6 +382,7 @@ p {
   display: flex;
   gap: var(--space-md);
   align-items: end;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -394,11 +395,14 @@ p {
   cursor: pointer;
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
+  white-space: nowrap;
+  min-height: 44px;
+  line-height: 1.2;
 }
 
 .btn::before {
@@ -936,6 +940,26 @@ p {
     padding: var(--space-xs) var(--space-sm);
     font-size: 0.75rem;
     border-radius: var(--radius-md);
+}
+
+/* ===== BUTTONS DE COMPARATIVES ===== */
+#generarComparativa,
+#exportarComparativa {
+    min-width: 140px;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-md) var(--space-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+#generarComparativa .icon,
+#exportarComparativa .icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 }
 
 /* ===== RESPONSIVE ===== */

@@ -284,6 +284,9 @@ function inicialitzarDashboard() {
     // Omplir filtres
     omplirFiltres();
     
+    // Carregar opcions de comparatives
+    carregarOpcionsComparatives();
+    
     // Afegir event listeners als filtres
     afegirEventListenersFiltres();
     
@@ -396,6 +399,7 @@ function actualitzarEstadistiquesDetallades() {
     actualitzarEstadistiquesPerAssignatura();
     actualitzarEstadistiquesPerTrimestre();
     actualitzarEstadistiquesPerClasse();
+    actualitzarTaulaComparativaDetallada();
 }
 
 function actualitzarEstadistiquesGenerals() {
@@ -1595,30 +1599,60 @@ function inicialitzarComparatives() {
 // Carregar opcions dels filtres de comparatives
 async function carregarOpcionsComparatives() {
     try {
-        // Carregar classes
-        const classesResponse = await fetch('/api/estudiants');
-        const classesData = await classesResponse.json();
-        if (classesData.success) {
-            const classes = [...new Set(classesData.data.map(e => e.classe))];
+        console.log('🔄 Carregant opcions per comparatives...');
+        
+        // Carregar classes des de les dades actuals
+        if (currentData.length > 0) {
+            const classes = [...new Set(currentData.map(e => e.classe))].sort();
             const classeSelect = document.getElementById('comparativaClasse');
-            classeSelect.innerHTML = '<option value="">Totes les classes</option>';
-            classes.forEach(classe => {
-                classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
-            });
+            if (classeSelect) {
+                classeSelect.innerHTML = '<option value="">Totes les classes</option>';
+                classes.forEach(classe => {
+                    classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+                });
+            }
+            
+            // Carregar assignatures des de les dades actuals
+            const assignatures = [...new Set(currentData.map(e => e.assignatura_nom))].sort();
+            const assignaturaSelect = document.getElementById('comparativaAssignatura');
+            if (assignaturaSelect) {
+                assignaturaSelect.innerHTML = '<option value="">Totes les assignatures</option>';
+                assignatures.forEach(ass => {
+                    assignaturaSelect.innerHTML += `<option value="${ass}">${ass}</option>`;
+                });
+            }
+        } else {
+            // Si no hi ha dades, intentar carregar des del servidor
+            const classesResponse = await fetch('/api/estudiants');
+            const classesData = await classesResponse.json();
+            if (classesData.success) {
+                const classes = [...new Set(classesData.data.map(e => e.classe))];
+                const classeSelect = document.getElementById('comparativaClasse');
+                if (classeSelect) {
+                    classeSelect.innerHTML = '<option value="">Totes les classes</option>';
+                    classes.forEach(classe => {
+                        classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+                    });
+                }
+            }
+            
+            const assignaturesResponse = await fetch('/api/assignatures');
+            const assignaturesData = await assignaturesResponse.json();
+            if (assignaturesData.success) {
+                const assignaturaSelect = document.getElementById('comparativaAssignatura');
+                if (assignaturaSelect) {
+                    assignaturaSelect.innerHTML = '<option value="">Totes les assignatures</option>';
+                    assignaturesData.data.forEach(ass => {
+                        assignaturaSelect.innerHTML += `<option value="${ass.nom}">${ass.nom}</option>`;
+                    });
+                }
+            }
         }
         
-        // Carregar assignatures
-        const assignaturesResponse = await fetch('/api/assignatures');
-        const assignaturesData = await assignaturesResponse.json();
-        if (assignaturesData.success) {
-            const assignaturaSelect = document.getElementById('comparativaAssignatura');
-            assignaturaSelect.innerHTML = '<option value="">Totes les assignatures</option>';
-            assignaturesData.data.forEach(ass => {
-                assignaturaSelect.innerHTML += `<option value="${ass.codi}">${ass.nom}</option>`;
-            });
-        }
+        console.log('✅ Opcions de comparatives carregades');
     } catch (error) {
-        console.error('Error carregant opcions de comparatives:', error);
+        console.error('❌ Error carregant opcions de comparatives:', error);
+        showStatus('error', 'Error carregant opcions de comparatives');
     }
 }
 
@@ -1634,6 +1668,9 @@ async function generarComparativa() {
         return;
     }
     
+    console.log(`🔄 Generant comparativa: ${tipus}`);
+    console.log(`📊 Filtres: classe=${classe}, assignatura=${assignatura}, trimestre=${trimestre}`);
+    
     showStatus('info', 'Generant comparativa...');
     
     try {
@@ -1646,17 +1683,22 @@ async function generarComparativa() {
         
         url += params.toString();
         
+        console.log(`🌐 Cridant API: ${url}`);
+        
         const response = await fetch(url);
         const result = await response.json();
+        
+        console.log('📊 Resposta de la API:', result);
         
         if (result.success) {
             mostrarComparativa(tipus, result.data);
             showStatus('success', 'Comparativa generada correctament');
         } else {
+            console.error('❌ Error de l\'API:', result.error);
             showStatus('error', 'Error generant la comparativa: ' + result.error);
         }
     } catch (error) {
-        console.error('Error generant comparativa:', error);
+        console.error('❌ Error de connexió:', error);
         showStatus('error', 'Error de connexió generant la comparativa');
     }
 }
@@ -1665,27 +1707,37 @@ async function generarComparativa() {
 function mostrarComparativa(tipus, data) {
     console.log(`📊 Mostrant comparativa de tipus: ${tipus}`, data);
     
-    switch (tipus) {
-        case 'materies':
-            mostrarComparativaMateries(data);
-            break;
-        case 'grups':
-            mostrarComparativaGrups(data);
-            break;
-        case 'temporal':
-            mostrarComparativaTemporal(data);
-            break;
-        case 'multidimensional':
-            mostrarComparativaMultidimensional(data);
-            break;
-        case 'correlacions':
-            mostrarComparativaCorrelacions(data);
-            break;
-        case 'variancia':
-            mostrarComparativaVariancia(data);
-            break;
-        default:
-            showStatus('error', 'Tipus de comparativa no reconegut');
+    if (!data || data.length === 0) {
+        showStatus('warning', 'No hi ha dades disponibles per a aquesta comparativa');
+        return;
+    }
+    
+    try {
+        switch (tipus) {
+            case 'materies':
+                mostrarComparativaMateries(data);
+                break;
+            case 'grups':
+                mostrarComparativaGrups(data);
+                break;
+            case 'temporal':
+                mostrarComparativaTemporal(data);
+                break;
+            case 'multidimensional':
+                mostrarComparativaMultidimensional(data);
+                break;
+            case 'correlacions':
+                mostrarComparativaCorrelacions(data);
+                break;
+            case 'variancia':
+                mostrarComparativaVariancia(data);
+                break;
+            default:
+                showStatus('error', 'Tipus de comparativa no reconegut');
+        }
+    } catch (error) {
+        console.error('❌ Error mostrant comparativa:', error);
+        showStatus('error', 'Error mostrant la comparativa: ' + error.message);
     }
 }
 
@@ -2313,6 +2365,72 @@ function actualitzarTaulaComparativa(data) {
                     ${item.significancia}
                 </span>
             </td>
+        </tr>
+    `).join('');
+}
+
+// Actualitzar taula comparativa detallada
+function actualitzarTaulaComparativaDetallada() {
+    const tbody = document.getElementById('comparativaDetalladaTableBody');
+    if (!tbody) return;
+    
+    if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8">No hi ha dades disponibles</td></tr>';
+        return;
+    }
+    
+    // Agrupar per assignatura i trimestre
+    const grups = {};
+    filteredData.forEach(item => {
+        const key = `${item.assignatura_nom}|${item.trimestre}`;
+        if (!grups[key]) {
+            grups[key] = {
+                assignatura: item.assignatura_nom,
+                trimestre: item.trimestre,
+                total: 0,
+                na: 0,
+                as: 0,
+                an: 0,
+                ae: 0
+            };
+        }
+        grups[key].total++;
+        
+        switch (item.assoliment) {
+            case 'NA': grups[key].na++; break;
+            case 'AS': grups[key].as++; break;
+            case 'AN': grups[key].an++; break;
+            case 'AE': grups[key].ae++; break;
+        }
+    });
+    
+    // Calcular percentatges i ordenar
+    const resultats = Object.values(grups).map(grup => ({
+        ...grup,
+        percentNA: grup.total > 0 ? Math.round((grup.na / grup.total) * 100) : 0,
+        percentAS: grup.total > 0 ? Math.round((grup.as / grup.total) * 100) : 0,
+        percentAN: grup.total > 0 ? Math.round((grup.an / grup.total) * 100) : 0,
+        percentAE: grup.total > 0 ? Math.round((grup.ae / grup.total) * 100) : 0,
+        percentAssolits: grup.total > 0 ? Math.round(((grup.as + grup.an + grup.ae) / grup.total) * 100) : 0
+    })).sort((a, b) => {
+        // Ordenar per assignatura i després per trimestre
+        if (a.assignatura !== b.assignatura) {
+            return a.assignatura.localeCompare(b.assignatura);
+        }
+        const trimestreOrder = { '1r trim': 1, '2n trim': 2, '3r trim': 3, 'final': 4 };
+        return (trimestreOrder[a.trimestre] || 0) - (trimestreOrder[b.trimestre] || 0);
+    });
+    
+    tbody.innerHTML = resultats.map(item => `
+        <tr>
+            <td>${item.assignatura}</td>
+            <td>${item.trimestre}</td>
+            <td>${item.total}</td>
+            <td class="percentage ${item.percentNA <= 20 ? 'high' : item.percentNA <= 40 ? 'medium' : 'low'}">${item.percentNA}%</td>
+            <td class="percentage ${item.percentAS >= 30 ? 'high' : item.percentAS >= 15 ? 'medium' : 'low'}">${item.percentAS}%</td>
+            <td class="percentage ${item.percentAN >= 20 ? 'high' : item.percentAN >= 10 ? 'medium' : 'low'}">${item.percentAN}%</td>
+            <td class="percentage ${item.percentAE >= 10 ? 'high' : item.percentAE >= 5 ? 'medium' : 'low'}">${item.percentAE}%</td>
+            <td class="percentage ${item.percentAssolits >= 80 ? 'high' : item.percentAssolits >= 60 ? 'medium' : 'low'}">${item.percentAssolits}%</td>
         </tr>
     `).join('');
 }
