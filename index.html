@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header Simplificado -->
     <header class="header" id="header">
         <div class="container">
             <div class="header-content">
@@ -40,17 +40,17 @@
                 </a>
                 
                 <div class="header-actions">
-                    <button class="btn btn-secondary" data-action="go-to-stats">
+                    <button class="btn btn-secondary" data-action="help">
                         <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
                         </svg>
-                        Veure Estadístiques
+                        Ajuda
                     </button>
-                    <button class="btn btn-secondary" data-action="export-table">
+                    <button class="btn btn-primary" data-action="export-all">
                         <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                         </svg>
-                        Exportar Taula
+                        Exportar Tot
                     </button>
                 </div>
             </div>
@@ -60,14 +60,40 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Upload Section -->
-            <section class="upload-section">
+            <!-- Breadcrumb Navigation -->
+            <nav class="breadcrumb" id="breadcrumb" style="display: none;">
+                <ol class="breadcrumb-list">
+                    <li class="breadcrumb-item">
+                        <a href="#" class="breadcrumb-link" data-step="upload">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            Inici
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="#" class="breadcrumb-link" data-step="dashboard">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Step 1: Upload Section (Paso Principal) -->
+            <section class="upload-section" id="uploadSection">
                 <div class="upload-content">
-                    <h1 class="upload-title">Dashboard d'Assoliments</h1>
-                    <p class="upload-description">
-                        Carrega el teu fitxer CSV amb les dades d'assoliments per visualitzar 
-                        estadístiques detallades i anàlisis educatius avançades.
-                    </p>
+                    <div class="step-indicator">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <h1 class="upload-title">Carrega les Dades</h1>
+                            <p class="upload-description">
+                                Comença carregant el fitxer CSV amb les dades d'assoliments dels teus alumnes.
+                            </p>
+                        </div>
+                    </div>
                     
                     <div class="file-upload-area" id="fileUploadArea">
                         <svg class="file-upload-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -78,12 +104,18 @@
                         <input type="file" id="fileInput" class="file-input" accept=".csv" data-action="file-select">
                     </div>
                     
-                    <div class="upload-actions" style="margin-top: var(--space-xl);">
-                        <button class="btn btn-primary" data-action="clear-data">
+                    <div class="upload-actions">
+                        <button class="btn btn-secondary" data-action="clear-data">
                             <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                             </svg>
                             Netejar Dades
+                        </button>
+                        <button class="btn btn-primary" data-action="load-sample">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Carregar Dades d'Exemple
                         </button>
                     </div>
                 </div>
@@ -92,632 +124,352 @@
             <!-- Status Messages -->
             <div id="statusContainer"></div>
 
-            <!-- Navigation Marker -->
-            <div id="navigationMarker" class="navigation-marker" style="display: none;">
-                <a href="#tabsSection" class="marker-link">
-                    <svg class="marker-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                    </svg>
-                    <span>Veure Estadístiques</span>
-                </a>
-            </div>
-
-            <!-- Filters Section -->
-            <section class="filters-section" id="filtersSection" style="display: none;">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label class="filter-label" for="classeFilter">Classe</label>
-                        <select id="classeFilter" class="filter-select" data-filter="classe">
-                            <option value="">Totes les classes</option>
-                        </select>
+            <!-- Step 2: Dashboard Section (Vista Principal) -->
+            <section class="dashboard-section" id="dashboardSection" style="display: none;">
+                <!-- Quick Actions Bar -->
+                <div class="quick-actions">
+                    <div class="quick-actions-left">
+                        <h2 class="dashboard-title">Dashboard d'Assoliments</h2>
+                        <p class="dashboard-subtitle">Anàlisi complet del rendiment acadèmic</p>
                     </div>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label" for="estudiantFilter">Estudiant</label>
-                        <select id="estudiantFilter" class="filter-select" data-filter="estudiant">
-                            <option value="">Tots els estudiants</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label" for="assignaturaFilter">Assignatura</label>
-                        <select id="assignaturaFilter" class="filter-select" data-filter="assignatura">
-                            <option value="">Totes les assignatures</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label" for="trimestreFilter">Trimestre</label>
-                        <select id="trimestreFilter" class="filter-select" data-filter="trimestre">
-                            <option value="">Tots els trimestres</option>
-                            <option value="1r trim">1r Trimestre</option>
-                            <option value="2n trim">2n Trimestre</option>
-                            <option value="3r trim">3r Trimestre</option>
-                            <option value="final">Final</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label" for="assolimentFilter">Assoliment</label>
-                        <select id="assolimentFilter" class="filter-select" data-filter="assoliment">
-                            <option value="">Tots els assoliments</option>
-                            <option value="NA">No Assolit</option>
-                            <option value="AS">Assolit</option>
-                            <option value="AN">Assolit Notable</option>
-                            <option value="AE">Assolit Excel·lent</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-buttons">
-                        <button class="btn btn-primary" data-action="apply-filters">
-                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                            </svg>
-                            Aplicar Filtres
-                        </button>
-                        <button class="btn btn-secondary" data-action="reset-filters">
+                    <div class="quick-actions-right">
+                        <button class="btn btn-secondary" data-action="refresh-data">
                             <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
                             </svg>
-                            Reiniciar
+                            Actualitzar
+                        </button>
+                        <button class="btn btn-primary" data-action="full-analysis">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                            </svg>
+                            Anàlisi Complet
                         </button>
                     </div>
                 </div>
-            </section>
 
-            <!-- Estadístiques Detallades Section -->
-            <section class="stats-section" id="statsSection" style="display: none;">
-                <div class="stats-header">
-                    <h2 class="stats-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-                        </svg>
-                        Estadístiques Detallades
-                    </h2>
-                    <button class="btn btn-primary" data-action="export-stats">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                        </svg>
-                        Exportar Estadístiques
-                    </button>
-                </div>
-                
-                <div class="stats-content">
-                    <div class="stats-grid">
-                        <div class="stats-card">
-                            <h3>Resum General</h3>
-                            <div class="stats-table-wrapper">
-                                <table class="stats-table" id="generalStatsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Mètrica</th>
-                                            <th>Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td colspan="2">Carregant...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <!-- Smart Filters (Filtres Inteligents) -->
+                <section class="smart-filters-section" id="smartFiltersSection">
+                    <div class="smart-filters-header">
+                        <h3 class="smart-filters-title">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            Filtres Ràpids
+                        </h3>
+                        <div class="smart-filters-actions">
+                            <button class="btn btn-secondary btn-small" data-action="save-filter">
+                                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                                </svg>
+                                Guardar
+                            </button>
+                            <button class="btn btn-secondary btn-small" data-action="reset-filters">
+                                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                                </svg>
+                                Reiniciar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="smart-filters-grid">
+                        <div class="filter-group">
+                            <label class="filter-label" for="classeFilter">Classe</label>
+                            <select id="classeFilter" class="filter-select" data-filter="classe">
+                                <option value="">Totes les classes</option>
+                            </select>
                         </div>
                         
-                        <div class="stats-card">
-                            <h3>Per Assignatura</h3>
-                            <div class="stats-table-wrapper">
-                                <table class="stats-table" id="assignaturaStatsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Assignatura</th>
-                                            <th>Total</th>
-                                            <th>% Assolits</th>
-                                            <th>% NA</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td colspan="4">Carregant...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="filter-group">
+                            <label class="filter-label" for="estudiantFilter">Estudiant</label>
+                            <select id="estudiantFilter" class="filter-select" data-filter="estudiant">
+                                <option value="">Tots els estudiants</option>
+                            </select>
                         </div>
                         
-                        <div class="stats-card">
-                            <h3>Per Trimestre</h3>
-                            <div class="stats-table-wrapper">
-                                <table class="stats-table" id="trimestreStatsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Trimestre</th>
-                                            <th>Total</th>
-                                            <th>% Assolits</th>
-                                            <th>% NA</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td colspan="4">Carregant...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="filter-group">
+                            <label class="filter-label" for="assignaturaFilter">Assignatura</label>
+                            <select id="assignaturaFilter" class="filter-select" data-filter="assignatura">
+                                <option value="">Totes les assignatures</option>
+                            </select>
                         </div>
                         
-                        <div class="stats-card">
-                            <h3>Per Classe</h3>
-                            <div class="stats-table-wrapper">
-                                <table class="stats-table" id="classeStatsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Classe</th>
-                                            <th>Total</th>
-                                            <th>% Assolits</th>
-                                            <th>% NA</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td colspan="4">Carregant...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="filter-group">
+                            <label class="filter-label" for="trimestreFilter">Trimestre</label>
+                            <select id="trimestreFilter" class="filter-select" data-filter="trimestre">
+                                <option value="">Tots els trimestres</option>
+                                <option value="1r trim">1r Trimestre</option>
+                                <option value="2n trim">2n Trimestre</option>
+                                <option value="3r trim">3r Trimestre</option>
+                                <option value="final">Final</option>
+                            </select>
                         </div>
                         
-                        <div class="stats-card full-width">
-                            <h3>Taula Comparativa per Assignatura i Trimestre</h3>
-                            <div class="comparativa-controls" style="margin-bottom: var(--space-lg);">
-                                <button class="btn btn-secondary btn-small" id="toggleComparativaView">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                        <div class="filter-group">
+                            <label class="filter-label" for="assolimentFilter">Assoliment</label>
+                            <select id="assolimentFilter" class="filter-select" data-filter="assoliment">
+                                <option value="">Tots els assoliments</option>
+                                <option value="NA">No Assolit</option>
+                                <option value="AS">Assolit</option>
+                                <option value="AN">Assolit Notable</option>
+                                <option value="AE">Assolit Excel·lent</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <button class="btn btn-primary" data-action="apply-filters">
+                                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                </svg>
+                                Aplicar Filtres
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Main Dashboard Content -->
+                <div class="dashboard-content">
+                    <!-- Overview Cards (Targetes de Resum) -->
+                    <section class="overview-section">
+                        <h3 class="section-title">Resum General</h3>
+                        <div class="overview-grid">
+                            <div class="overview-card" id="totalStudentsCard">
+                                <div class="overview-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26V16h-1.5v6h5zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm2 16v-7H9V9c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v6.5h1.5V22h4z"/>
                                     </svg>
-                                    Canviar Vista
-                                </button>
-                                <button class="btn btn-secondary btn-small" id="exportComparativaDetallada">
+                                </div>
+                                <div class="overview-content">
+                                    <div class="overview-value" id="totalStudents">-</div>
+                                    <div class="overview-label">Total Estudiants</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overview-card" id="averagePerformanceCard">
+                                <div class="overview-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
+                                    </svg>
+                                </div>
+                                <div class="overview-content">
+                                    <div class="overview-value" id="averagePerformance">-</div>
+                                    <div class="overview-label">Mitjana General</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overview-card" id="achievementRateCard">
+                                <div class="overview-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="overview-content">
+                                    <div class="overview-value" id="achievementRate">-</div>
+                                    <div class="overview-label">% Assolits</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overview-card" id="improvementCard">
+                                <div class="overview-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7 14l5-5 5 5z"/>
+                                    </svg>
+                                </div>
+                                <div class="overview-content">
+                                    <div class="overview-value" id="improvement">-</div>
+                                    <div class="overview-label">Evolució</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Main Charts Section -->
+                    <section class="charts-section">
+                        <div class="charts-header">
+                            <h3 class="section-title">Gràfics Principals</h3>
+                            <div class="charts-controls">
+                                <button class="btn btn-secondary btn-small" data-action="export-charts">
                                     <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                                     </svg>
                                     Exportar
                                 </button>
                             </div>
-                            
-                            <!-- Vista Tabla Tradicional -->
-                            <div id="comparativaTableView" class="comparativa-view">
-                                <div class="stats-table-wrapper">
-                                    <table class="stats-table" id="comparativaDetalladaTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Assignatura</th>
-                                                <th>Trimestre</th>
-                                                <th>Total</th>
-                                                <th>NA (%)</th>
-                                                <th>AS (%)</th>
-                                                <th>AN (%)</th>
-                                                <th>AE (%)</th>
-                                                <th>% Assolits</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="comparativaDetalladaTableBody">
-                                            <tr><td colspan="8">Carregant...</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            
-                            <!-- Vista Agrupada per Assignatura -->
-                            <div id="comparativaGroupedView" class="comparativa-view" style="display: none;">
-                                <div id="comparativaGroupedContent">
-                                    <div class="loading">
-                                        <div class="loading-spinner"></div>
-                                        Carregant vista agrupada...
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Comparativa Avançada Section -->
-            <section class="comparativa-avancada-section" id="comparativaAvancadaSection" style="display: none;">
-                <div class="comparativa-avancada-header">
-                    <h2 class="comparativa-avancada-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                        </svg>
-                        Comparativa Avançada per Assignatura i Trimestre
-                    </h2>
-                    <div class="comparativa-avancada-controls">
-                        <button class="btn btn-primary" id="exportComparativaAvancada">
-                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                            </svg>
-                            Exportar Comparativa
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="comparativa-avancada-content">
-                    <div id="comparativaAvancadaContent">
-                        <div class="loading">
-                            <div class="loading-spinner"></div>
-                            Carregant comparativa avançada...
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Tabs Section -->
-            <section class="tabs-section" id="tabsSection" style="display: none;">
-                <div class="tabs-header">
-                    <button class="tab-button active" data-tab="general">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-                        </svg>
-                        General
-                    </button>
-                    <button class="tab-button" data-tab="trimestres">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                        </svg>
-                        Trimestres
-                    </button>
-                    <button class="tab-button" data-tab="assignatures">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        Assignatures
-                    </button>
-                    <button class="tab-button" data-tab="grups">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26V16h-1.5v6h5zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm2 16v-7H9V9c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v6.5h1.5V22h4z"/>
-                        </svg>
-                        Grups
-                    </button>
-                    <button class="tab-button" data-tab="individual">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                        Individual
-                    </button>
-                    <button class="tab-button" data-tab="taula">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-                        </svg>
-                        Taula Detallada
-                    </button>
-                    <button class="tab-button" data-tab="comparatives">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                        </svg>
-                        Comparatives
-                    </button>
-                </div>
-
-                <div class="tab-content">
-                    <!-- General Tab -->
-                    <div class="tab-pane active" id="general">
+                        
                         <div class="charts-grid">
                             <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zM13.03 2v8.99L22 10.99c-.47-4.74-4.07-8.74-8.97-8.99zM13.03 13.01L13.03 22c4.9-.25 8.5-4.25 8.97-8.99h-8.97z"/>
-                                    </svg>
-                                    Distribució d'Assoliments
-                                </h3>
+                                <h4 class="chart-title">Distribució d'Assoliments</h4>
                                 <div class="chart-content">
                                     <canvas id="assolimentsChart"></canvas>
                                 </div>
                             </div>
                             
                             <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-                                    </svg>
-                                    Mitjana per Assignatura
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="mitjanaChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
-                                    </svg>
-                                    Evolució per Trimestre
-                                </h3>
+                                <h4 class="chart-title">Evolució per Trimestre</h4>
                                 <div class="chart-content">
                                     <canvas id="evolucioChart"></canvas>
                                 </div>
                             </div>
                             
                             <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
-                                    Rendiment per Classe
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="rendimentChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Trimestres Tab -->
-                    <div class="tab-pane" id="trimestres">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                                    </svg>
-                                    Comparativa per Trimestre
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="trimestresChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
-                                    </svg>
-                                    Evolució Temporal
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="evolucioTemporalChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Assignatures Tab -->
-                    <div class="tab-pane" id="assignatures">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
-                                    Rendiment per Assignatura
-                                </h3>
+                                <h4 class="chart-title">Rendiment per Assignatura</h4>
                                 <div class="chart-content">
                                     <canvas id="assignaturesChart"></canvas>
                                 </div>
                             </div>
                             
                             <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zM13.03 2v8.99L22 10.99c-.47-4.74-4.07-8.74-8.97-8.99zM13.03 13.01L13.03 22c4.9-.25 8.5-4.25 8.97-8.99h-8.97z"/>
-                                    </svg>
-                                    Assoliments per Assignatura
-                                </h3>
+                                <h4 class="chart-title">Comparativa per Classe</h4>
                                 <div class="chart-content">
-                                    <canvas id="assolimentsAssignaturesChart"></canvas>
+                                    <canvas id="rendimentChart"></canvas>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- Grups Tab -->
-                    <div class="tab-pane" id="grups">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26V16h-1.5v6h5zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm2 16v-7H9V9c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v6.5h1.5V22h4z"/>
+                    <!-- Detailed Analysis Section -->
+                    <section class="analysis-section">
+                        <div class="analysis-header">
+                            <h3 class="section-title">Anàlisi Detallat</h3>
+                            <div class="analysis-tabs">
+                                <button class="analysis-tab active" data-tab="comparatives">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
                                     </svg>
-                                    Comparativa entre Classes
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="classesChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zM13.03 2v8.99L22 10.99c-.47-4.74-4.07-8.74-8.97-8.99zM13.03 13.01L13.03 22c4.9-.25 8.5-4.25 8.97-8.99h-8.97z"/>
+                                    Comparatives
+                                </button>
+                                <button class="analysis-tab" data-tab="statistics">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                                     </svg>
-                                    Distribució per Grup
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="distribucioGrupsChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Individual Tab -->
-                    <div class="tab-pane" id="individual">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    Estadístiques
+                                </button>
+                                <button class="analysis-tab" data-tab="individual">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                                     </svg>
-                                    Perfil Individual
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="perfilIndividualChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="chart-container">
-                                <h3 class="chart-title">
-                                    <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
-                                    </svg>
-                                    Evolució Individual
-                                </h3>
-                                <div class="chart-content">
-                                    <canvas id="evolucioIndividualChart"></canvas>
-                                </div>
+                                    Individual
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Comparatives Tab -->
-                    <div class="tab-pane" id="comparatives">
-                        <!-- Filtres específics per comparatives -->
-                        <div class="filters-section" style="margin-bottom: var(--space-xl);">
-                            <h3 style="margin-bottom: var(--space-lg); color: var(--neutral-700);">Filtres per Comparatives</h3>
-                            <div class="filters-grid">
-                                <div class="filter-group">
-                                    <label class="filter-label" for="comparativaType">Tipus de Comparativa</label>
-                                    <select id="comparativaType" class="filter-select">
-                                        <option value="materies">Comparativa entre Materies</option>
-                                        <option value="grups">Comparativa entre Grups</option>
-                                        <option value="temporal">Comparativa Temporal</option>
-                                        <option value="multidimensional">Comparativa Multidimensional</option>
-                                        <option value="correlacions">Anàlisi de Correlacions</option>
-                                        <option value="variancia">Anàlisi de Variància</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="filter-group">
-                                    <label class="filter-label" for="comparativaClasse">Classe (opcional)</label>
-                                    <select id="comparativaClasse" class="filter-select">
-                                        <option value="">Totes les classes</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="filter-group">
-                                    <label class="filter-label" for="comparativaAssignatura">Assignatura (opcional)</label>
-                                    <select id="comparativaAssignatura" class="filter-select">
-                                        <option value="">Totes les assignatures</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="filter-group">
-                                    <label class="filter-label" for="comparativaTrimestre">Trimestre (opcional)</label>
-                                    <select id="comparativaTrimestre" class="filter-select">
-                                        <option value="">Tots els trimestres</option>
-                                        <option value="1r trim">1r Trimestre</option>
-                                        <option value="2n trim">2n Trimestre</option>
-                                        <option value="3r trim">3r Trimestre</option>
-                                        <option value="final">Final</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="filter-buttons">
-                                    <button class="btn btn-primary" id="generarComparativa">
-                                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                                        </svg>
-                                        Generar Comparativa
-                                    </button>
-                                    <button class="btn btn-secondary" id="exportarComparativa">
+                        
+                        <div class="analysis-content">
+                            <!-- Comparatives Tab -->
+                            <div class="analysis-pane active" id="comparatives">
+                                <div class="comparatives-header">
+                                    <h4>Comparativa Avançada per Assignatura i Trimestre</h4>
+                                    <button class="btn btn-primary" id="exportComparativaAvancada">
                                         <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                                         </svg>
                                         Exportar
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Contingut dinàmic de comparatives -->
-                        <div id="comparativaContent">
-                            <div class="charts-grid">
-                                <div class="chart-container">
-                                    <h3 class="chart-title">
-                                        <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                                        </svg>
-                                        Comparativa de Rendiment
-                                    </h3>
-                                    <div class="chart-content">
-                                        <canvas id="comparativaChart"></canvas>
-                                    </div>
-                                </div>
-                                
-                                <div class="chart-container">
-                                    <h3 class="chart-title">
-                                        <svg class="chart-icon" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zM13.03 2v8.99L22 10.99c-.47-4.74-4.07-8.74-8.97-8.99zM13.03 13.01L13.03 22c4.9-.25 8.5-4.25 8.97-8.99h-8.97z"/>
-                                        </svg>
-                                        Anàlisi Detallada
-                                    </h3>
-                                    <div class="chart-content">
-                                        <canvas id="analisiDetalladaChart"></canvas>
+                                <div id="comparativaAvancadaContent">
+                                    <div class="loading">
+                                        <div class="loading-spinner"></div>
+                                        Carregant comparativa...
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Taula de resultats -->
-                            <div class="table-container" style="margin-top: var(--space-xl);">
-                                <div class="table-header">
-                                    <h3 class="table-title">Resultats de la Comparativa</h3>
+                            <!-- Statistics Tab -->
+                            <div class="analysis-pane" id="statistics">
+                                <div class="stats-grid">
+                                    <div class="stats-card">
+                                        <h4>Per Assignatura</h4>
+                                        <div class="stats-table-wrapper">
+                                            <table class="stats-table" id="assignaturaStatsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Assignatura</th>
+                                                        <th>Total</th>
+                                                        <th>% Assolits</th>
+                                                        <th>% NA</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr><td colspan="4">Carregant...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="stats-card">
+                                        <h4>Per Trimestre</h4>
+                                        <div class="stats-table-wrapper">
+                                            <table class="stats-table" id="trimestreStatsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Trimestre</th>
+                                                        <th>Total</th>
+                                                        <th>% Assolits</th>
+                                                        <th>% NA</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr><td colspan="4">Carregant...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="table-wrapper">
-                                    <table class="table" id="comparativaTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Mètrica</th>
-                                                <th>Valor</th>
-                                                <th>Comparació</th>
-                                                <th>Significància</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="comparativaTableBody">
-                                            <tr>
-                                                <td colspan="4" class="text-center">
-                                                    <div class="loading">
-                                                        <div class="loading-spinner"></div>
-                                                        Selecciona un tipus de comparativa i fes clic a "Generar"
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            </div>
+                            
+                            <!-- Individual Tab -->
+                            <div class="analysis-pane" id="individual">
+                                <div class="individual-search">
+                                    <input type="text" id="studentSearch" placeholder="Cerca un estudiant..." class="search-input">
+                                    <button class="btn btn-primary" data-action="search-student">
+                                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                        </svg>
+                                        Cercar
+                                    </button>
+                                </div>
+                                <div id="individualContent">
+                                    <div class="loading">
+                                        <div class="loading-spinner"></div>
+                                        Selecciona un estudiant per veure el seu perfil...
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Taula Detallada Tab -->
-                    <div class="tab-pane" id="taula">
-                        <div class="table-container">
-                            <div class="table-header">
-                                <h3 class="table-title">Taula Detallada d'Assoliments</h3>
-                            </div>
-                            <div class="table-wrapper">
-                                <table class="table" id="assolimentsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Estudiant</th>
-                                            <th>Classe</th>
-                                            <th>Assignatura</th>
-                                            <th>Trimestre</th>
-                                            <th>Assoliment</th>
-                                            <th>Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="assolimentsTableBody">
-                                        <tr>
-                                            <td colspan="6" class="text-center">
-                                                <div class="loading">
-                                                    <div class="loading-spinner"></div>
-                                                    Carregant dades...
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer style="text-align: center; padding: var(--space-xl); color: var(--neutral-500); font-size: 0.875rem;">
-        <p>Dashboard d'Assoliments - Anàlisi Educatiu Avançada</p>
-    </footer>
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Com Utilitzar l'Aplicació</h3>
+                <button class="modal-close" data-action="close-help">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>1. Carregar Dades</h4>
+                    <p>Arrossega un fitxer CSV amb les dades d'assoliments o fes clic per seleccionar-lo.</p>
+                </div>
+                <div class="help-section">
+                    <h4>2. Aplicar Filtres</h4>
+                    <p>Utilitza els filtres ràpids per veure dades específiques per classe, estudiant, assignatura o trimestre.</p>
+                </div>
+                <div class="help-section">
+                    <h4>3. Analitzar Resultats</h4>
+                    <p>Explora els gràfics i estadístiques per entendre el rendiment dels teus alumnes.</p>
+                </div>
+                <div class="help-section">
+                    <h4>4. Exportar Informes</h4>
+                    <p>Genera informes detallats per compartir amb altres professors o pares.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="script.js"></script>
