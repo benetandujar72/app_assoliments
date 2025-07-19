@@ -189,25 +189,64 @@ function navigateToStep(step) {
     console.log(`🧭 Navegant a pas: ${step}`);
     currentStep = step;
     
+    // Verificar que els elements existeixen
+    const uploadSection = document.getElementById('uploadSection');
+    const dashboardSection = document.getElementById('dashboardSection');
+    const breadcrumb = document.getElementById('breadcrumb');
+    
+    console.log('🔍 Elements trobats:', {
+        uploadSection: !!uploadSection,
+        dashboardSection: !!dashboardSection,
+        breadcrumb: !!breadcrumb
+    });
+    
+    if (!uploadSection || !dashboardSection) {
+        console.error('❌ Elements de navegació no trobats');
+        showStatus('error', 'Error de navegació: Elements no trobats');
+        return;
+    }
+    
     // Hide all sections
-    document.getElementById('uploadSection').style.display = 'none';
-    document.getElementById('dashboardSection').style.display = 'none';
+    uploadSection.style.display = 'none';
+    dashboardSection.style.display = 'none';
     
     // Show breadcrumb
-    const breadcrumb = document.getElementById('breadcrumb');
-    breadcrumb.style.display = 'block';
+    if (breadcrumb) {
+        breadcrumb.style.display = 'block';
+    }
     
     // Show appropriate section
     if (step === 'upload') {
-        document.getElementById('uploadSection').style.display = 'block';
-        breadcrumb.style.display = 'none';
+        uploadSection.style.display = 'block';
+        if (breadcrumb) {
+            breadcrumb.style.display = 'none';
+        }
+        console.log('✅ Secció d\'upload mostrada');
     } else if (step === 'dashboard') {
-        document.getElementById('dashboardSection').style.display = 'block';
-        updateBreadcrumb(step);
+        dashboardSection.style.display = 'block';
+        if (breadcrumb) {
+            updateBreadcrumb(step);
+        }
+        console.log('✅ Secció de dashboard mostrada');
+        
+        // Forçar reflow per assegurar que es mostra
+        dashboardSection.offsetHeight;
+        
+        // Verificar que realment es mostra
+        const isVisible = dashboardSection.style.display !== 'none';
+        console.log(`🔍 Dashboard visible: ${isVisible}`);
+        
+        if (!isVisible) {
+            console.error('❌ Dashboard no es mostra correctament');
+            // Intentar forçar la visualització
+            dashboardSection.style.display = 'block !important';
+        }
     }
     
     // Update breadcrumb active state
     updateBreadcrumbActive(step);
+    
+    console.log(`✅ Navegació completada a: ${step}`);
 }
 
 function updateBreadcrumb(step) {
@@ -381,7 +420,23 @@ async function carregarDadesDelServidor() {
                 console.log(`📊 Registres amb assignatura vàlida: ${registresAmbAssignatura}/${currentData.length}`);
             }
             
+            // Debug DOM abans d'inicialitzar
+            debugDOMState();
+            
             inicialitzarDashboard();
+            
+            // Debug DOM després d'inicialitzar
+            setTimeout(() => {
+                debugDOMState();
+                
+                // Si el dashboard no es mostra, forçar-ho
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection && dashboardSection.style.display === 'none') {
+                    console.log('⚠️ Dashboard encara ocult, forçant visualització...');
+                    forceShowDashboard();
+                }
+            }, 1000);
+            
             showStatus('success', `Dades carregades: ${currentData.length} registres`);
         } else {
             console.error('❌ Error carregant dades:', result.message);
@@ -395,26 +450,49 @@ async function carregarDadesDelServidor() {
 
 function inicialitzarDashboard() {
     console.log('🎯 Inicialitzant dashboard...');
+    console.log('📊 Dades disponibles:', {
+        currentData: currentData.length,
+        filteredData: filteredData.length
+    });
     
-    // Verificar que els elements del DOM existeixen
-    verificarElementsDOM();
-    
-    // Navigate to dashboard
-    navigateToStep('dashboard');
-    
-    // Update overview cards
-    actualitzarOverviewCards();
-    
-    // Fill filters
-    omplirFiltres();
-    
-    // Update charts
-    actualitzarGraficos();
-    
-    // Update analysis sections
-    actualitzarAnalisiSections();
-    
-    console.log('✅ Dashboard inicialitzat correctament');
+    try {
+        // Verificar que els elements del DOM existeixen
+        const elements = verificarElementsDOM();
+        
+        // Verificar que tenim dades
+        if (currentData.length === 0) {
+            console.warn('⚠️ No hi ha dades per inicialitzar el dashboard');
+            showStatus('warning', 'No hi ha dades disponibles per mostrar');
+            return;
+        }
+        
+        // Navigate to dashboard
+        console.log('🧭 Navegant al dashboard...');
+        navigateToStep('dashboard');
+        
+        // Update overview cards
+        console.log('📊 Actualitzant targetes de resum...');
+        actualitzarOverviewCards();
+        
+        // Fill filters
+        console.log('🔍 Omplint filtres...');
+        omplirFiltres();
+        
+        // Update charts
+        console.log('📈 Actualitzant gràfics...');
+        actualitzarGraficos();
+        
+        // Update analysis sections
+        console.log('📋 Actualitzant seccions d\'anàlisi...');
+        actualitzarAnalisiSections();
+        
+        console.log('✅ Dashboard inicialitzat correctament');
+        showStatus('success', 'Dashboard carregat correctament');
+        
+    } catch (error) {
+        console.error('❌ Error inicialitzant dashboard:', error);
+        showStatus('error', 'Error inicialitzant el dashboard: ' + error.message);
+    }
 }
 
 function verificarElementsDOM() {
@@ -1221,6 +1299,11 @@ function handleActionClick(event) {
             break;
         case 'export-debug':
             exportDebugData();
+            break;
+        case 'force-show-dashboard':
+            debugDOMState();
+            forceShowDashboard();
+            showStatus('info', 'Forçant visualització del dashboard...');
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -2503,6 +2586,83 @@ async function clearData() {
             console.error('❌ Error netejant dades:', error);
             showStatus('error', 'Error de connexió. Si us plau, torna-ho a provar.');
         }
+    }
+}
+
+// Funció per verificar l'estat del DOM i forçar visualització
+function debugDOMState() {
+    console.log('🔍 DEBUG: Verificant estat del DOM...');
+    
+    const elements = {
+        uploadSection: document.getElementById('uploadSection'),
+        dashboardSection: document.getElementById('dashboardSection'),
+        breadcrumb: document.getElementById('breadcrumb'),
+        statusContainer: document.getElementById('statusContainer')
+    };
+    
+    Object.entries(elements).forEach(([name, element]) => {
+        if (element) {
+            const computedStyle = window.getComputedStyle(element);
+            console.log(`📋 ${name}:`, {
+                exists: true,
+                display: element.style.display,
+                computedDisplay: computedStyle.display,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity,
+                height: computedStyle.height,
+                width: computedStyle.width,
+                position: computedStyle.position,
+                zIndex: computedStyle.zIndex
+            });
+        } else {
+            console.log(`❌ ${name}: No trobat`);
+        }
+    });
+    
+    // Verificar si hi ha elements amb display: none
+    const hiddenElements = document.querySelectorAll('[style*="display: none"]');
+    console.log(`🔍 Elements ocults: ${hiddenElements.length}`);
+    hiddenElements.forEach((el, index) => {
+        if (index < 5) { // Mostrar només els primers 5
+            console.log(`  - ${el.id || el.className || el.tagName}: ${el.style.display}`);
+        }
+    });
+    
+    // Verificar l'estat actual
+    console.log('📊 Estat actual:', {
+        currentStep,
+        currentDataLength: currentData.length,
+        filteredDataLength: filteredData.length
+    });
+}
+
+// Funció per forçar la visualització del dashboard
+function forceShowDashboard() {
+    console.log('🔧 Forçant visualització del dashboard...');
+    
+    const dashboardSection = document.getElementById('dashboardSection');
+    if (dashboardSection) {
+        // Forçar visualització
+        dashboardSection.style.display = 'block';
+        dashboardSection.style.visibility = 'visible';
+        dashboardSection.style.opacity = '1';
+        dashboardSection.style.height = 'auto';
+        dashboardSection.style.overflow = 'visible';
+        
+        // Forçar reflow
+        dashboardSection.offsetHeight;
+        
+        console.log('✅ Dashboard forçat a mostrar');
+        
+        // Verificar que es mostra
+        const isVisible = dashboardSection.style.display !== 'none' && 
+                         window.getComputedStyle(dashboardSection).display !== 'none';
+        console.log(`🔍 Dashboard visible després de forçar: ${isVisible}`);
+        
+        return isVisible;
+    } else {
+        console.error('❌ No es pot trobar dashboardSection');
+        return false;
     }
 }
 
