@@ -1214,6 +1214,9 @@ function handleActionClick(event) {
         case 'export-charts':
             exportCharts();
             break;
+        case 'export-debug':
+            exportDebugData();
+            break;
         case 'search-student':
             searchStudent();
             break;
@@ -1272,19 +1275,127 @@ function saveFilter() {
 }
 
 function exportAll() {
-    showStatus('info', 'Exportant totes les dades...');
-    // Implementation for exporting all data
-    setTimeout(() => {
-        showStatus('success', 'Exportació completada');
-    }, 2000);
+    console.log('📤 Exportant totes les dades...');
+    
+    if (filteredData.length === 0) {
+        showStatus('error', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    try {
+        // Exportar dades originals
+        exportDataAsCSV(filteredData, 'dades_completes.csv', {
+            headers: ['classe', 'estudiant', 'assignatura', 'trimestre', 'assoliment'],
+            includeHeaders: true
+        });
+        
+    } catch (error) {
+        console.error('Error exportant totes les dades:', error);
+        showStatus('error', 'Error exportant les dades');
+    }
 }
 
 function exportCharts() {
-    showStatus('info', 'Exportant gràfics...');
-    // Implementation for exporting charts
-    setTimeout(() => {
-        showStatus('success', 'Gràfics exportats correctament');
-    }, 1500);
+    console.log('📤 Exportant dades dels gràfics...');
+    
+    if (filteredData.length === 0) {
+        showStatus('error', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    try {
+        // Exportar dades per gràfics
+        const chartData = {
+            assoliments: {
+                na: filteredData.filter(item => item.assoliment === 'NA').length,
+                as: filteredData.filter(item => item.assoliment === 'AS').length,
+                an: filteredData.filter(item => item.assoliment === 'AN').length,
+                ae: filteredData.filter(item => item.assoliment === 'AE').length
+            },
+            perAssignatura: {},
+            perTrimestre: {}
+        };
+        
+        // Dades per assignatura
+        const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+        assignatures.forEach(assignatura => {
+            const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+            chartData.perAssignatura[assignatura] = {
+                total: assignaturaData.length,
+                assolits: assignaturaData.filter(item => item.assoliment !== 'NA').length,
+                percentatge: ((assignaturaData.filter(item => item.assoliment !== 'NA').length / assignaturaData.length) * 100).toFixed(1)
+            };
+        });
+        
+        // Dades per trimestre
+        const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+        trimestres.forEach(trimestre => {
+            const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
+            chartData.perTrimestre[trimestre] = {
+                total: trimestreData.length,
+                assolits: trimestreData.filter(item => item.assoliment !== 'NA').length,
+                percentatge: ((trimestreData.filter(item => item.assoliment !== 'NA').length / trimestreData.length) * 100).toFixed(1)
+            };
+        });
+        
+        // Crear CSV per gràfics
+        let csvContent = 'Tipus,Assignatura/Trimestre,Total,Assolits,Percentatge\n';
+        
+        // Afegir dades per assignatura
+        Object.entries(chartData.perAssignatura).forEach(([assignatura, data]) => {
+            csvContent += `Assignatura,${assignatura},${data.total},${data.assolits},${data.percentatge}%\n`;
+        });
+        
+        // Afegir dades per trimestre
+        Object.entries(chartData.perTrimestre).forEach(([trimestre, data]) => {
+            csvContent += `Trimestre,${trimestre},${data.total},${data.assolits},${data.percentatge}%\n`;
+        });
+        
+        downloadCSV(csvContent, 'dades_graficos.csv');
+        
+    } catch (error) {
+        console.error('Error exportant dades dels gràfics:', error);
+        showStatus('error', 'Error exportant les dades dels gràfics');
+    }
+}
+
+// Funció per exportar dades de debugging
+function exportDebugData() {
+    console.log('📤 Exportant dades de debugging...');
+    
+    try {
+        const debugData = {
+            currentData: {
+                total: currentData.length,
+                mostra: currentData.slice(0, 5)
+            },
+            filteredData: {
+                total: filteredData.length,
+                mostra: filteredData.slice(0, 5)
+            },
+            elements: verificarElementsDOM()
+        };
+        
+        const debugContent = JSON.stringify(debugData, null, 2);
+        
+        // Crear fitxer de text amb dades de debugging
+        const blob = new Blob([debugContent], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'debug_data.json');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('✅ Dades de debugging exportades');
+        showStatus('success', 'Dades de debugging exportades');
+        
+    } catch (error) {
+        console.error('Error exportant dades de debugging:', error);
+        showStatus('error', 'Error exportant dades de debugging');
+    }
 }
 
 function searchStudent() {
@@ -2237,17 +2348,111 @@ function exportEstadistiquesAvancades() {
 }
 
 function downloadCSV(content, filename) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    try {
+        console.log(`📤 Intentant descarregar: ${filename}`);
+        console.log(`📊 Contingut generat: ${content.length} caràcters`);
+        
+        if (!content || content.length === 0) {
+            console.error('❌ Error: Contingut buit per exportar');
+            showStatus('error', 'No hi ha dades per exportar');
+            return;
+        }
+        
+        // Crear blob amb BOM per UTF-8
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + content], { 
+            type: 'text/csv;charset=utf-8;' 
+        });
+        
+        console.log(`📦 Blob creat: ${blob.size} bytes`);
+        
+        // Crear link de descàrrega
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            // Afegir al DOM i clicar
+            document.body.appendChild(link);
+            link.click();
+            
+            // Netejar després d'un moment
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            console.log(`✅ Fitxer descarregat: ${filename}`);
+            showStatus('success', `Fitxer descarregat: ${filename}`);
+        } else {
+            // Fallback per navegadors antics
+            console.log('⚠️ Navegador no suporta download, obrint en nova finestra');
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            showStatus('info', 'Fitxer obert en nova finestra (copia i pega per desar)');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error descarregant fitxer:', error);
+        showStatus('error', 'Error descarregant el fitxer: ' + error.message);
+        
+        // Fallback: mostrar contingut a la consola
+        console.log('📋 Contingut del fitxer (copia manualment):');
+        console.log(content);
+    }
+}
+
+// Funció alternativa d'exportació amb més opcions
+function exportDataAsCSV(data, filename, options = {}) {
+    try {
+        console.log(`📤 Exportant dades com a CSV: ${filename}`);
+        console.log(`📊 Registres a exportar: ${data.length}`);
+        
+        if (!data || data.length === 0) {
+            showStatus('error', 'No hi ha dades per exportar');
+            return;
+        }
+        
+        // Opcions per defecte
+        const {
+            headers = Object.keys(data[0]),
+            separator = ',',
+            includeHeaders = true
+        } = options;
+        
+        let csvContent = '';
+        
+        // Afegir headers si cal
+        if (includeHeaders) {
+            csvContent += headers.join(separator) + '\n';
+        }
+        
+        // Afegir dades
+        data.forEach(row => {
+            const values = headers.map(header => {
+                const value = row[header];
+                // Escapar cometes i afegir cometes si conté separador
+                if (value === null || value === undefined) return '';
+                const stringValue = String(value);
+                if (stringValue.includes(separator) || stringValue.includes('"') || stringValue.includes('\n')) {
+                    return `"${stringValue.replace(/"/g, '""')}"`;
+                }
+                return stringValue;
+            });
+            csvContent += values.join(separator) + '\n';
+        });
+        
+        console.log(`📝 CSV generat: ${csvContent.length} caràcters`);
+        
+        // Descarregar
+        downloadCSV(csvContent, filename);
+        
+    } catch (error) {
+        console.error('❌ Error exportant dades:', error);
+        showStatus('error', 'Error exportant les dades: ' + error.message);
     }
 }
 
