@@ -3202,7 +3202,7 @@ function inicialitzarMenuDebug() {
                 e.stopPropagation();
                 const action = button.dataset.action;
                 console.log(`🔧 Botó de debugging clicat: ${action}`);
-                handleActionClick(action);
+                handleDebugAction(action);
                 
                 // Tancar menú després de clicar
                 setTimeout(() => {
@@ -3214,6 +3214,79 @@ function inicialitzarMenuDebug() {
         console.log('✅ Menú de debugging inicialitzat');
     } else {
         console.error('❌ Elements del menú de debugging no trobats');
+    }
+}
+
+// Funció per manejar accions del menú de debugging
+function handleDebugAction(action) {
+    console.log(`🔧 Executant acció de debugging: ${action}`);
+    
+    switch (action) {
+        case 'get-all-data':
+            obtenirTotesLesDades().then(dades => {
+                if (dades) {
+                    showStatus('success', `Obtingudes ${dades.length} dades completes`);
+                } else {
+                    showStatus('error', 'Error obtenint totes les dades');
+                }
+            });
+            break;
+        case 'get-stats':
+            obtenirEstadistiquesCompletes().then(stats => {
+                if (stats) {
+                    showStatus('success', `BD: ${stats.total_estudiants} estudiants, ${stats.total_assoliments} assoliments`);
+                } else {
+                    showStatus('error', 'Error obtenint estadístiques');
+                }
+            });
+            break;
+        case 'verify-data':
+            verificarDadesDetallades();
+            showStatus('info', 'Verificant dades detallades...');
+            break;
+        case 'clean-duplicates':
+            const resultat = netejarDadesDuplicades();
+            showStatus('success', `Netejades ${resultat.duplicatsEliminats} dades duplicades`);
+            setTimeout(() => {
+                actualitzarOverviewCards();
+                omplirFiltres();
+                actualitzarGraficos();
+            }, 100);
+            break;
+        case 'force-dashboard':
+            debugDOMState();
+            forceShowDashboard();
+            showStatus('info', 'Forçant visualització del dashboard...');
+            break;
+        case 'verify-tabs':
+            verificarPestanyesAnalisi();
+            showStatus('info', 'Verificant estat de les pestanyes...');
+            break;
+        case 'force-tabs':
+            forçarVisualitzacióPestanyes();
+            showStatus('info', 'Forçant visualització de pestanyes...');
+            break;
+        case 'debug-dom':
+            verificarEstatDOM();
+            showStatus('info', 'Debugging DOM...');
+            break;
+        case 'diagnose-tabs':
+            diagnosticarPestanyesAnalisi();
+            showStatus('info', 'Diagnosticant pestanyes...');
+            break;
+        case 'force-analysis':
+            forçarVisualitzacióAnalisiComplet();
+            showStatus('info', 'Forçant visualització d\'anàlisi complet...');
+            break;
+        case 'export':
+            exportAll();
+            break;
+        case 'export-comparativa':
+            exportComparativaAvancada();
+            break;
+        default:
+            console.log(`🔧 Acció de debugging no implementada: ${action}`);
+            showStatus('warning', `Acció no implementada: ${action}`);
     }
 }
 
