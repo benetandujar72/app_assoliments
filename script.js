@@ -228,6 +228,8 @@ function navigateToStep(step) {
         } else if (step === 'dashboard') {
             console.log('🔍 Mostrant secció de dashboard...');
             dashboardSection.style.display = 'block';
+            dashboardSection.style.opacity = '1';  // Forçar opacity a 1
+            dashboardSection.style.visibility = 'visible';
             if (breadcrumb) {
                 updateBreadcrumb(step);
             }
@@ -237,13 +239,15 @@ function navigateToStep(step) {
             dashboardSection.offsetHeight;
             
             // Verificar que realment es mostra
-            const isVisible = dashboardSection.style.display !== 'none';
+            const isVisible = dashboardSection.style.display !== 'none' && 
+                             window.getComputedStyle(dashboardSection).opacity !== '0';
             console.log(`🔍 Dashboard visible: ${isVisible}`);
             
             if (!isVisible) {
                 console.error('❌ Dashboard no es mostra correctament');
                 // Intentar forçar la visualització
                 dashboardSection.style.display = 'block !important';
+                dashboardSection.style.opacity = '1 !important';
             }
         }
         
@@ -438,6 +442,9 @@ async function carregarDadesDelServidor() {
             // Debug DOM després d'inicialitzar
             setTimeout(() => {
                 debugDOMState();
+                
+                // Verificar i corregir opacity
+                verificarIOpacityDashboard();
                 
                 // Si el dashboard no es mostra, forçar-ho
                 const dashboardSection = document.getElementById('dashboardSection');
@@ -1322,6 +1329,10 @@ function handleActionClick(event) {
             debugDOMState();
             forceShowDashboard();
             showStatus('info', 'Forçant visualització del dashboard...');
+            break;
+        case 'fix-opacity':
+            verificarIOpacityDashboard();
+            showStatus('info', 'Verificant i corregint opacity...');
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -2663,7 +2674,7 @@ function forceShowDashboard() {
         // Forçar visualització
         dashboardSection.style.display = 'block';
         dashboardSection.style.visibility = 'visible';
-        dashboardSection.style.opacity = '1';
+        dashboardSection.style.opacity = '1';  // Forçar opacity a 1
         dashboardSection.style.height = 'auto';
         dashboardSection.style.overflow = 'visible';
         
@@ -2674,7 +2685,8 @@ function forceShowDashboard() {
         
         // Verificar que es mostra
         const isVisible = dashboardSection.style.display !== 'none' && 
-                         window.getComputedStyle(dashboardSection).display !== 'none';
+                         window.getComputedStyle(dashboardSection).display !== 'none' &&
+                         window.getComputedStyle(dashboardSection).opacity !== '0';
         console.log(`🔍 Dashboard visible després de forçar: ${isVisible}`);
         
         return isVisible;
@@ -2682,6 +2694,33 @@ function forceShowDashboard() {
         console.error('❌ No es pot trobar dashboardSection');
         return false;
     }
+}
+
+// Funció per verificar i corregir l'opacity del dashboard
+function verificarIOpacityDashboard() {
+    const dashboardSection = document.getElementById('dashboardSection');
+    if (dashboardSection) {
+        const computedStyle = window.getComputedStyle(dashboardSection);
+        const opacity = computedStyle.opacity;
+        
+        console.log(`🔍 Opacity actual del dashboard: ${opacity}`);
+        
+        if (opacity === '0') {
+            console.log('⚠️ Dashboard té opacity 0, corregint...');
+            dashboardSection.style.opacity = '1';
+            dashboardSection.style.visibility = 'visible';
+            
+            // Forçar reflow
+            dashboardSection.offsetHeight;
+            
+            console.log('✅ Opacity corregida a 1');
+            return true;
+        } else {
+            console.log('✅ Opacity correcta:', opacity);
+            return false;
+        }
+    }
+    return false;
 }
 
  
