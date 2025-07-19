@@ -260,24 +260,52 @@
                         
                         <div class="stats-card full-width">
                             <h3>Taula Comparativa per Assignatura i Trimestre</h3>
-                            <div class="stats-table-wrapper">
-                                <table class="stats-table" id="comparativaDetalladaTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Assignatura</th>
-                                            <th>Trimestre</th>
-                                            <th>Total</th>
-                                            <th>NA (%)</th>
-                                            <th>AS (%)</th>
-                                            <th>AN (%)</th>
-                                            <th>AE (%)</th>
-                                            <th>% Assolits</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="comparativaDetalladaTableBody">
-                                        <tr><td colspan="8">Carregant...</td></tr>
-                                    </tbody>
-                                </table>
+                            <div class="comparativa-controls" style="margin-bottom: var(--space-lg);">
+                                <button class="btn btn-secondary btn-small" id="toggleComparativaView">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                                    </svg>
+                                    Canviar Vista
+                                </button>
+                                <button class="btn btn-secondary btn-small" id="exportComparativaDetallada">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                    </svg>
+                                    Exportar
+                                </button>
+                            </div>
+                            
+                            <!-- Vista Tabla Tradicional -->
+                            <div id="comparativaTableView" class="comparativa-view">
+                                <div class="stats-table-wrapper">
+                                    <table class="stats-table" id="comparativaDetalladaTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Assignatura</th>
+                                                <th>Trimestre</th>
+                                                <th>Total</th>
+                                                <th>NA (%)</th>
+                                                <th>AS (%)</th>
+                                                <th>AN (%)</th>
+                                                <th>AE (%)</th>
+                                                <th>% Assolits</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="comparativaDetalladaTableBody">
+                                            <tr><td colspan="8">Carregant...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Vista Agrupada per Assignatura -->
+                            <div id="comparativaGroupedView" class="comparativa-view" style="display: none;">
+                                <div id="comparativaGroupedContent">
+                                    <div class="loading">
+                                        <div class="loading-spinner"></div>
+                                        Carregant vista agrupada...
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

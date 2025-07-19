@@ -1592,6 +1592,18 @@ function inicialitzarComparatives() {
     document.getElementById('generarComparativa').addEventListener('click', generarComparativa);
     document.getElementById('exportarComparativa').addEventListener('click', exportarComparativa);
     
+    // Event listeners per vista comparativa detallada
+    const toggleButton = document.getElementById('toggleComparativaView');
+    const exportButton = document.getElementById('exportComparativaDetallada');
+    
+    if (toggleButton) {
+        toggleButton.addEventListener('click', toggleComparativaView);
+    }
+    
+    if (exportButton) {
+        exportButton.addEventListener('click', exportComparativaDetallada);
+    }
+    
     // Carregar opcions dels filtres de comparatives
     carregarOpcionsComparatives();
 }
@@ -2376,6 +2388,7 @@ function actualitzarTaulaComparativaDetallada() {
     
     if (filteredData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8">No hi ha dades disponibles</td></tr>';
+        actualitzarVistaAgrupada([]);
         return;
     }
     
@@ -2421,6 +2434,7 @@ function actualitzarTaulaComparativaDetallada() {
         return (trimestreOrder[a.trimestre] || 0) - (trimestreOrder[b.trimestre] || 0);
     });
     
+    // Actualitzar taula tradicional
     tbody.innerHTML = resultats.map(item => `
         <tr>
             <td>${item.assignatura}</td>
@@ -2433,6 +2447,198 @@ function actualitzarTaulaComparativaDetallada() {
             <td class="percentage ${item.percentAssolits >= 80 ? 'high' : item.percentAssolits >= 60 ? 'medium' : 'low'}">${item.percentAssolits}%</td>
         </tr>
     `).join('');
+    
+    // Actualitzar vista agrupada
+    actualitzarVistaAgrupada(resultats);
+}
+
+// Actualitzar vista agrupada per assignatura
+function actualitzarVistaAgrupada(resultats) {
+    const content = document.getElementById('comparativaGroupedContent');
+    if (!content) return;
+    
+    if (resultats.length === 0) {
+        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        return;
+    }
+    
+    // Agrupar per assignatura
+    const assignatures = {};
+    resultats.forEach(item => {
+        if (!assignatures[item.assignatura]) {
+            assignatures[item.assignatura] = [];
+        }
+        assignatures[item.assignatura].push(item);
+    });
+    
+    // Generar HTML per cada assignatura
+    const assignaturesHTML = Object.entries(assignatures).map(([assignatura, items]) => {
+        // Calcular estadístiques totals de l'assignatura
+        const totalStats = {
+            total: items.reduce((sum, item) => sum + item.total, 0),
+            na: items.reduce((sum, item) => sum + item.na, 0),
+            as: items.reduce((sum, item) => sum + item.as, 0),
+            an: items.reduce((sum, item) => sum + item.an, 0),
+            ae: items.reduce((sum, item) => sum + item.ae, 0)
+        };
+        
+        totalStats.percentNA = totalStats.total > 0 ? Math.round((totalStats.na / totalStats.total) * 100) : 0;
+        totalStats.percentAS = totalStats.total > 0 ? Math.round((totalStats.as / totalStats.total) * 100) : 0;
+        totalStats.percentAN = totalStats.total > 0 ? Math.round((totalStats.an / totalStats.total) * 100) : 0;
+        totalStats.percentAE = totalStats.total > 0 ? Math.round((totalStats.ae / totalStats.total) * 100) : 0;
+        totalStats.percentAssolits = totalStats.total > 0 ? Math.round(((totalStats.as + totalStats.an + totalStats.ae) / totalStats.total) * 100) : 0;
+        
+        // Generar HTML dels trimestres
+        const trimestresHTML = items.map(item => `
+            <div class="comparativa-trimestre">
+                <div class="comparativa-trimestre-header">
+                    <span class="comparativa-trimestre-title">${item.trimestre}</span>
+                    <span class="comparativa-trimestre-total">${item.total} estudiants</span>
+                </div>
+                <div class="comparativa-progress-bars">
+                    <div class="comparativa-progress-item">
+                        <span class="comparativa-progress-label">NA</span>
+                        <div class="comparativa-progress-bar">
+                            <div class="comparativa-progress-fill na" style="width: ${item.percentNA}%"></div>
+                        </div>
+                        <span class="comparativa-progress-value">${item.percentNA}%</span>
+                    </div>
+                    <div class="comparativa-progress-item">
+                        <span class="comparativa-progress-label">AS</span>
+                        <div class="comparativa-progress-bar">
+                            <div class="comparativa-progress-fill as" style="width: ${item.percentAS}%"></div>
+                        </div>
+                        <span class="comparativa-progress-value">${item.percentAS}%</span>
+                    </div>
+                    <div class="comparativa-progress-item">
+                        <span class="comparativa-progress-label">AN</span>
+                        <div class="comparativa-progress-bar">
+                            <div class="comparativa-progress-fill an" style="width: ${item.percentAN}%"></div>
+                        </div>
+                        <span class="comparativa-progress-value">${item.percentAN}%</span>
+                    </div>
+                    <div class="comparativa-progress-item">
+                        <span class="comparativa-progress-label">AE</span>
+                        <div class="comparativa-progress-bar">
+                            <div class="comparativa-progress-fill ae" style="width: ${item.percentAE}%"></div>
+                        </div>
+                        <span class="comparativa-progress-value">${item.percentAE}%</span>
+                    </div>
+                </div>
+                <div class="comparativa-summary">
+                    <div class="comparativa-summary-value">${item.percentAssolits}%</div>
+                    <div class="comparativa-summary-label">Assolits</div>
+                </div>
+            </div>
+        `).join('');
+        
+        return `
+            <div class="comparativa-group">
+                <div class="comparativa-group-header">
+                    <h4 class="comparativa-group-title">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        ${assignatura}
+                    </h4>
+                    <div class="comparativa-group-stats">
+                        <div class="comparativa-stat">
+                            <div class="comparativa-stat-label">Total</div>
+                            <div class="comparativa-stat-value">${totalStats.total}</div>
+                        </div>
+                        <div class="comparativa-stat">
+                            <div class="comparativa-stat-label">% Assolits</div>
+                            <div class="comparativa-stat-value">${totalStats.percentAssolits}%</div>
+                        </div>
+                        <div class="comparativa-stat">
+                            <div class="comparativa-stat-label">% NA</div>
+                            <div class="comparativa-stat-value">${totalStats.percentNA}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparativa-trimestres">
+                    ${trimestresHTML}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    content.innerHTML = assignaturesHTML;
+}
+
+// Canviar vista de comparativa detallada
+function toggleComparativaView() {
+    const tableView = document.getElementById('comparativaTableView');
+    const groupedView = document.getElementById('comparativaGroupedView');
+    const toggleButton = document.getElementById('toggleComparativaView');
+    
+    if (tableView.style.display === 'none') {
+        // Mostrar vista de taula
+        tableView.style.display = 'block';
+        groupedView.style.display = 'none';
+        toggleButton.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+            </svg>
+            Canviar Vista
+        `;
+        toggleButton.title = 'Canviar a vista agrupada';
+    } else {
+        // Mostrar vista agrupada
+        tableView.style.display = 'none';
+        groupedView.style.display = 'block';
+        toggleButton.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm3-10h14v2H7zm0 5h14v2H7zm0 5h14v2H7z"/>
+            </svg>
+            Canviar Vista
+        `;
+        toggleButton.title = 'Canviar a vista de taula';
+    }
+}
+
+// Exportar comparativa detallada
+function exportComparativaDetallada() {
+    const tbody = document.getElementById('comparativaDetalladaTableBody');
+    if (!tbody) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length === 0 || (rows.length === 1 && rows[0].textContent.includes('Carregant'))) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    const csvData = [
+        ['Comparativa per Assignatura i Trimestre'],
+        [''],
+        ['Assignatura', 'Trimestre', 'Total', 'NA (%)', 'AS (%)', 'AN (%)', 'AE (%)', '% Assolits']
+    ];
+    
+    rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        if (cells.length === 8) {
+            csvData.push([
+                cells[0].textContent,
+                cells[1].textContent,
+                cells[2].textContent,
+                cells[3].textContent,
+                cells[4].textContent,
+                cells[5].textContent,
+                cells[6].textContent,
+                cells[7].textContent
+            ]);
+        }
+    });
+    
+    const csv = csvData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    downloadCSV(csv, `comparativa_detallada_${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('success', 'Comparativa detallada exportada correctament');
 }
 
 // Exportar comparativa

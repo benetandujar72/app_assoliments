@@ -1228,6 +1228,229 @@ p {
     color: var(--error-600);
 }
 
+/* ===== VISTA COMPARATIVA AGROPADA ===== */
+.comparativa-controls {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.comparativa-view {
+    transition: all var(--transition-normal);
+}
+
+.comparativa-group {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-lg);
+    overflow: hidden;
+    border: 1px solid var(--neutral-200);
+}
+
+.comparativa-group-header {
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--primary-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.comparativa-group-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-700);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comparativa-group-stats {
+    display: flex;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.comparativa-stat {
+    text-align: center;
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--primary-200);
+}
+
+.comparativa-stat-label {
+    font-size: 0.75rem;
+    color: var(--neutral-600);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.comparativa-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary-700);
+    margin-top: var(--space-xs);
+}
+
+.comparativa-trimestres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+}
+
+.comparativa-trimestre {
+    background: var(--neutral-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    border: 1px solid var(--neutral-200);
+    transition: all var(--transition-normal);
+}
+
+.comparativa-trimestre:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-300);
+}
+
+.comparativa-trimestre-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--neutral-200);
+}
+
+.comparativa-trimestre-title {
+    font-weight: 600;
+    color: var(--neutral-700);
+    font-size: 1rem;
+}
+
+.comparativa-trimestre-total {
+    background: var(--primary-500);
+    color: white;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.comparativa-progress-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.comparativa-progress-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comparativa-progress-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--neutral-700);
+    min-width: 60px;
+}
+
+.comparativa-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--neutral-200);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+.comparativa-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-normal);
+}
+
+.comparativa-progress-fill.na { background: var(--error-500); }
+.comparativa-progress-fill.as { background: var(--warning-500); }
+.comparativa-progress-fill.an { background: var(--primary-500); }
+.comparativa-progress-fill.ae { background: var(--success-500); }
+
+.comparativa-progress-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--neutral-600);
+    min-width: 40px;
+    text-align: right;
+}
+
+.comparativa-summary {
+    background: var(--success-50);
+    border: 1px solid var(--success-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-top: var(--space-md);
+    text-align: center;
+}
+
+.comparativa-summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success-600);
+    margin-bottom: var(--space-xs);
+}
+
+.comparativa-summary-label {
+    font-size: 0.875rem;
+    color: var(--success-700);
+    font-weight: 500;
+}
+
+/* ===== RESPONSIVE COMPARATIVA ===== */
+@media (max-width: 768px) {
+    .comparativa-group-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+    
+    .comparativa-group-stats {
+        gap: var(--space-sm);
+    }
+    
+    .comparativa-stat {
+        padding: var(--space-xs) var(--space-sm);
+    }
+    
+    .comparativa-trimestres {
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+        padding: var(--space-md);
+    }
+    
+    .comparativa-trimestre {
+        padding: var(--space-sm);
+    }
+    
+    .comparativa-progress-label {
+        min-width: 50px;
+        font-size: 0.8rem;
+    }
+    
+    .comparativa-progress-value {
+        min-width: 35px;
+        font-size: 0.7rem;
+    }
+}
+
 /* ===== RESPONSIVE STATS ===== */
 @media (max-width: 768px) {
     .stats-header {
