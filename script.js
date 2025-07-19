@@ -416,6 +416,17 @@ async function carregarDadesDelServidor() {
             console.log(`✅ Dades carregades: ${currentData.length} registres`);
             console.log('📋 Mostra de dades mapejades:', currentData.slice(0, 3));
             
+            // Verificar i netejar duplicats si cal
+            const registresUnics = new Set(currentData.map(item => 
+                `${item.classe}-${item.estudiant}-${item.assignatura}-${item.trimestre}`
+            ));
+            
+            if (registresUnics.size < currentData.length) {
+                console.log('⚠️ Detectats duplicats, netejant automàticament...');
+                const resultat = netejarDadesDuplicades();
+                console.log(`✅ Netejats ${resultat.duplicatsEliminats} duplicats automàticament`);
+            }
+            
             // Verificar estructura de dades
             if (currentData.length > 0) {
                 const primerRegistre = currentData[0];
@@ -1369,6 +1380,16 @@ function handleActionClick(event) {
         case 'verify-data':
             verificarDadesDetallades();
             showStatus('info', 'Verificant dades detallades...');
+            break;
+        case 'clean-duplicates':
+            const resultat = netejarDadesDuplicades();
+            showStatus('success', `Netejades ${resultat.duplicatsEliminats} dades duplicades`);
+            // Actualitzar dashboard després de netejar
+            setTimeout(() => {
+                actualitzarOverviewCards();
+                omplirFiltres();
+                actualitzarGraficos();
+            }, 100);
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -2861,6 +2882,52 @@ function verificarDadesDetallades() {
     }
     
     return info;
+}
+
+// Funció per netejar dades duplicades
+function netejarDadesDuplicades() {
+    console.log('🧹 Netejant dades duplicades...');
+    
+    const registresUnics = new Map();
+    const dadesNetejades = [];
+    const duplicatsEliminats = [];
+    
+    currentData.forEach((item, index) => {
+        const clau = `${item.classe}-${item.estudiant}-${item.assignatura}-${item.trimestre}`;
+        
+        if (registresUnics.has(clau)) {
+            duplicatsEliminats.push({
+                index: index,
+                clau: clau,
+                item: item
+            });
+        } else {
+            registresUnics.set(clau, true);
+            dadesNetejades.push(item);
+        }
+    });
+    
+    console.log('📊 Resultat de neteja:', {
+        registresOriginals: currentData.length,
+        registresNetejats: dadesNetejades.length,
+        duplicatsEliminats: duplicatsEliminats.length
+    });
+    
+    if (duplicatsEliminats.length > 0) {
+        console.log('🗑️ Duplicats eliminats (primers 5):', duplicatsEliminats.slice(0, 5));
+    }
+    
+    // Actualitzar les dades
+    currentData = dadesNetejades;
+    filteredData = [...currentData];
+    
+    console.log('✅ Dades netejades correctament');
+    
+    return {
+        registresOriginals: currentData.length + duplicatsEliminats.length,
+        registresNetejats: currentData.length,
+        duplicatsEliminats: duplicatsEliminats.length
+    };
 }
 
  
