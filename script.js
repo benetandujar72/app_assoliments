@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeChartJS();
     
     // Inicialitzar event listeners
-    inicialitzarEventListeners();
+    initializeEventListeners();
     
     // Inicialitzar menú de debugging
     inicialitzarMenuDebug();
