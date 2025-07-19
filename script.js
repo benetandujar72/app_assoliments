@@ -305,7 +305,16 @@ async function carregarDadesDelServidor() {
         const result = await response.json();
         
         if (result.success) {
-            currentData = result.data;
+            // Mapejar les dades del backend al format esperat pel frontend
+            currentData = result.data.map(item => ({
+                classe: item.classe,
+                estudiant: item.estudiant_nom,
+                assignatura: item.assignatura_nom,
+                trimestre: item.trimestre,
+                assoliment: item.assoliment,
+                valor_numeric: item.valor_numeric,
+                id: item.id
+            }));
             filteredData = [...currentData];
             
             console.log(`✅ Dades carregades: ${currentData.length} registres`);
