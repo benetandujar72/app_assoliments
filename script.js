@@ -383,11 +383,12 @@ async function uploadCSV(csvData, fileName) {
 async function carregarDadesDelServidor() {
     try {
         console.log('📊 Carregant dades del servidor...');
-        const response = await fetch('/api/assoliments');
+        const response = await fetch('/api/assoliments?limit=5000'); // Augmentar límit
         const result = await response.json();
         
         if (result.success) {
             console.log('🔍 Dades originals del servidor:', result.data.slice(0, 3));
+            console.log('📊 Total dades obtingudes:', result.data.length);
             
             // Mapejar les dades del backend al format esperat pel frontend
             currentData = result.data.map(item => {
@@ -415,6 +416,11 @@ async function carregarDadesDelServidor() {
             
             console.log(`✅ Dades carregades: ${currentData.length} registres`);
             console.log('📋 Mostra de dades mapejades:', currentData.slice(0, 3));
+            
+            // Verificar estudiants únics
+            const estudiantsUnics = new Set(currentData.map(item => item.estudiant));
+            console.log(`📊 Estudiants únics trobats: ${estudiantsUnics.size}`);
+            console.log('📋 Llista d\'estudiants:', Array.from(estudiantsUnics).sort());
             
             // Verificar i netejar duplicats si cal
             const registresUnics = new Set(currentData.map(item => 
@@ -1390,6 +1396,15 @@ function handleActionClick(event) {
                 omplirFiltres();
                 actualitzarGraficos();
             }, 100);
+            break;
+        case 'get-all-data':
+            obtenirTotesLesDades().then(dades => {
+                if (dades) {
+                    showStatus('success', `Obtingudes ${dades.length} dades completes`);
+                } else {
+                    showStatus('error', 'Error obtenint totes les dades');
+                }
+            });
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -2928,6 +2943,80 @@ function netejarDadesDuplicades() {
         registresNetejats: currentData.length,
         duplicatsEliminats: duplicatsEliminats.length
     };
+}
+
+// Funció per obtenir totes les dades sense límit
+async function obtenirTotesLesDades() {
+    try {
+        console.log('🔍 Obtenint totes les dades sense límit...');
+        
+        const response = await fetch('/api/assoliments?limit=10000');
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('📊 Dades obtingudes:', {
+                total: result.data.length,
+                limit: result.limit,
+                offset: result.offset
+            });
+            
+            // Verificar estudiants únics
+            const estudiantsUnics = new Set(result.data.map(item => item.estudiant_nom));
+            const classesUniques = new Set(result.data.map(item => item.classe));
+            const assignaturesUniques = new Set(result.data.map(item => item.assignatura_nom));
+            
+            console.log('📋 Anàlisi de dades completes:', {
+                totalRegistres: result.data.length,
+                estudiantsUnics: estudiantsUnics.size,
+                classesUniques: classesUniques.size,
+                assignaturesUniques: assignaturesUniques.size,
+                estudiants: Array.from(estudiantsUnics).sort(),
+                classes: Array.from(classesUniques).sort(),
+                assignatures: Array.from(assignaturesUniques).sort()
+            });
+            
+            return result.data;
+        } else {
+            console.error('❌ Error obtenint dades:', result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error connexió:', error);
+        return null;
+    }
+}
+
+// Funció per obtenir estadístiques completes de la base de dades
+async function obtenirEstadistiquesCompletes() {
+    try {
+        console.log('📊 Obtenint estadístiques completes de la base de dades...');
+        
+        const response = await fetch('/api/assoliments/stats');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            
+            console.log('📊 Estadístiques completes de la base de dades:', {
+                total_estudiants: stats.total_estudiants,
+                total_assignatures: stats.total_assignatures,
+                total_assoliments: stats.total_assoliments,
+                estudiants_per_classe: stats.per_classe,
+                assoliments_per_assignatura: stats.per_assignatura
+            });
+            
+            console.log('📋 Llista completa d\'estudiants:', stats.estudiants);
+            console.log('📋 Llista completa d\'assignatures:', stats.assignatures);
+            
+            return stats;
+        } else {
+            console.error('❌ Error obtenint estadístiques:', result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error connexió:', error);
+        return null;
+    }
 }
 
  

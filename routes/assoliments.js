@@ -183,6 +183,68 @@ router.get('/assignatura/:nom', async (req, res) => {
     }
 });
 
+// GET /api/assoliments/stats - Estadístiques completes de la base de dades
+router.get('/stats', async (req, res) => {
+    try {
+        console.log('📊 Obtenint estadístiques completes...');
+        
+        // Comptar registres a cada taula
+        const estudiantsResult = await query('SELECT COUNT(*) as total FROM estudiants');
+        const assignaturesResult = await query('SELECT COUNT(*) as total FROM assignatures');
+        const assolimentsResult = await query('SELECT COUNT(*) as total FROM assoliments');
+        
+        // Obtenir llista d'estudiants
+        const estudiantsList = await query('SELECT nom, classe FROM estudiants ORDER BY nom');
+        
+        // Obtenir llista d'assignatures
+        const assignaturesList = await query('SELECT nom FROM assignatures ORDER BY nom');
+        
+        // Obtenir estadístiques per classe
+        const statsPerClasse = await query(`
+            SELECT 
+                e.classe,
+                COUNT(DISTINCT e.id) as total_estudiants,
+                COUNT(a.id) as total_assoliments
+            FROM estudiants e
+            LEFT JOIN assoliments a ON e.id = a.estudiant_id
+            GROUP BY e.classe
+            ORDER BY e.classe
+        `);
+        
+        // Obtenir estadístiques per assignatura
+        const statsPerAssignatura = await query(`
+            SELECT 
+                ass.nom as assignatura,
+                COUNT(a.id) as total_assoliments
+            FROM assignatures ass
+            LEFT JOIN assoliments a ON ass.id = a.assignatura_id
+            GROUP BY ass.nom
+            ORDER BY ass.nom
+        `);
+        
+        res.json({
+            success: true,
+            stats: {
+                total_estudiants: parseInt(estudiantsResult.rows[0].total),
+                total_assignatures: parseInt(assignaturesResult.rows[0].total),
+                total_assoliments: parseInt(assolimentsResult.rows[0].total),
+                estudiants: estudiantsList.rows,
+                assignatures: assignaturesList.rows,
+                per_classe: statsPerClasse.rows,
+                per_assignatura: statsPerAssignatura.rows
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error obtenint estadístiques:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error obtenint les estadístiques',
+            message: error.message
+        });
+    }
+});
+
 // GET /api/assoliments/diagnostic - Diagnòstic de dades
 router.get('/diagnostic', async (req, res) => {
     try {
