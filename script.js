@@ -727,7 +727,619 @@ function searchStudent() {
     }
 }
 
-// ===== EXISTING FUNCTIONS (Mantener compatibilidad) =====
-// ... existing code ...
+// ===== UTILITY FUNCTIONS =====
+function showStatus(type, message) {
+    const statusContainer = document.getElementById('statusContainer');
+    const statusElement = document.createElement('div');
+    statusElement.className = `status-message status-${type}`;
+    statusElement.innerHTML = `
+        <div class="status-content">
+            <span class="status-text">${message}</span>
+            <button class="status-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+    `;
+    
+    statusContainer.appendChild(statusElement);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (statusElement.parentElement) {
+            statusElement.remove();
+        }
+    }, 5000);
+}
+
+function showProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.display = 'block';
+    updateProgress(0, 'Iniciant...');
+}
+
+function updateProgress(percentage, text) {
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+    
+    if (progressFill) {
+        progressFill.style.width = `${percentage}%`;
+    }
+    if (progressText) {
+        progressText.textContent = text;
+    }
+}
+
+function hideProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.display = 'none';
+}
+
+// ===== FILTER FUNCTIONS =====
+function handleFilterChange(event) {
+    const filterType = event.target.dataset.filter;
+    const filterValue = event.target.value;
+    
+    console.log(`🔍 Filtre canviat: ${filterType} = ${filterValue}`);
+    
+    // Apply filters immediately if auto-apply is enabled
+    if (filterType) {
+        aplicarFiltres();
+    }
+}
+
+function aplicarFiltres() {
+    console.log('🔍 Aplicant filtres...');
+    
+    let filtered = [...currentData];
+    
+    // Apply each filter
+    const filters = {
+        classe: document.getElementById('classeFilter').value,
+        estudiant: document.getElementById('estudiantFilter').value,
+        assignatura: document.getElementById('assignaturaFilter').value,
+        trimestre: document.getElementById('trimestreFilter').value,
+        assoliment: document.getElementById('assolimentFilter').value
+    };
+    
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+            filtered = filtered.filter(item => item[key] === value);
+        }
+    });
+    
+    filteredData = filtered;
+    
+    console.log(`✅ Filtres aplicats: ${filteredData.length} registres`);
+    
+    // Update all components
+    actualitzarOverviewCards();
+    actualitzarGraficos();
+    actualitzarAnalisiSections();
+    
+    showStatus('success', `Filtres aplicats: ${filteredData.length} registres trobats`);
+}
+
+function resetFiltres() {
+    console.log('🔄 Reiniciant filtres...');
+    
+    // Reset all filter selects
+    document.getElementById('classeFilter').value = '';
+    document.getElementById('estudiantFilter').value = '';
+    document.getElementById('assignaturaFilter').value = '';
+    document.getElementById('trimestreFilter').value = '';
+    document.getElementById('assolimentFilter').value = '';
+    
+    // Reset data
+    filteredData = [...currentData];
+    
+    // Update all components
+    actualitzarOverviewCards();
+    actualitzarGraficos();
+    actualitzarAnalisiSections();
+    
+    showStatus('success', 'Filtres reiniciats');
+}
+
+// ===== CHART FUNCTIONS =====
+function crearGraficAssoliments() {
+    const ctx = document.getElementById('assolimentsChart');
+    if (!ctx) return;
+    
+    const assolimentCounts = {
+        'NA': 0, 'AS': 0, 'AN': 0, 'AE': 0
+    };
+    
+    filteredData.forEach(item => {
+        assolimentCounts[item.assoliment] = (assolimentCounts[item.assoliment] || 0) + 1;
+    });
+    
+    const data = {
+        labels: ['No Assolit', 'Assolit', 'Notable', 'Excel·lent'],
+        datasets: [{
+            data: [assolimentCounts.NA, assolimentCounts.AS, assolimentCounts.AN, assolimentCounts.AE],
+            backgroundColor: [
+                '#ef4444', // Red for NA
+                '#f59e0b', // Orange for AS
+                '#0ea5e9', // Blue for AN
+                '#22c55e'  // Green for AE
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    };
+    
+    charts.assoliments = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+function crearGraficEvolucio() {
+    const ctx = document.getElementById('evolucioChart');
+    if (!ctx) return;
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    const assolimentValues = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 };
+    
+    const data = trimestres.map(trimestre => {
+        const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
+        if (trimestreData.length === 0) return 0;
+        
+        const totalValue = trimestreData.reduce((sum, item) => {
+            return sum + (assolimentValues[item.assoliment] || 0);
+        }, 0);
+        
+        return (totalValue / trimestreData.length / 3) * 100;
+    });
+    
+    charts.evolucio = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['1r Trimestre', '2n Trimestre', '3r Trimestre', 'Final'],
+            datasets: [{
+                label: 'Rendiment Mitjà (%)',
+                data: data,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function crearGraficAssignatures() {
+    const ctx = document.getElementById('assignaturesChart');
+    if (!ctx) return;
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const assolimentValues = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 };
+    
+    const data = assignatures.map(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        if (assignaturaData.length === 0) return 0;
+        
+        const totalValue = assignaturaData.reduce((sum, item) => {
+            return sum + (assolimentValues[item.assoliment] || 0);
+        }, 0);
+        
+        return (totalValue / assignaturaData.length / 3) * 100;
+    });
+    
+    charts.assignatures = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: assignatures,
+            datasets: [{
+                label: 'Rendiment Mitjà (%)',
+                data: data,
+                backgroundColor: 'rgba(14, 165, 233, 0.8)',
+                borderColor: '#0ea5e9',
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function crearGraficRendiment() {
+    const ctx = document.getElementById('rendimentChart');
+    if (!ctx) return;
+    
+    const classes = [...new Set(filteredData.map(item => item.classe))];
+    const assolimentValues = { 'NA': 0, 'AS': 1, 'AN': 2, 'AE': 3 };
+    
+    const data = classes.map(classe => {
+        const classeData = filteredData.filter(item => item.classe === classe);
+        if (classeData.length === 0) return 0;
+        
+        const totalValue = classeData.reduce((sum, item) => {
+            return sum + (assolimentValues[item.assoliment] || 0);
+        }, 0);
+        
+        return (totalValue / classeData.length / 3) * 100;
+    });
+    
+    charts.rendiment = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: classes,
+            datasets: [{
+                label: 'Rendiment Mitjà (%)',
+                data: data,
+                backgroundColor: 'rgba(217, 70, 239, 0.8)',
+                borderColor: '#d946ef',
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// ===== STATISTICS FUNCTIONS =====
+function actualitzarEstadistiquesPerAssignatura() {
+    const table = document.getElementById('assignaturaStatsTable');
+    if (!table) return;
+    
+    if (filteredData.length === 0) {
+        table.querySelector('tbody').innerHTML = '<tr><td colspan="4">No hi ha dades disponibles</td></tr>';
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    let html = '';
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        const total = assignaturaData.length;
+        const assolits = assignaturaData.filter(item => item.assoliment !== 'NA').length;
+        const na = assignaturaData.filter(item => item.assoliment === 'NA').length;
+        
+        const assolitsPercent = ((assolits / total) * 100).toFixed(1);
+        const naPercent = ((na / total) * 100).toFixed(1);
+        
+        html += `
+            <tr>
+                <td>${assignatura}</td>
+                <td>${total}</td>
+                <td class="percentage ${assolitsPercent >= 70 ? 'high' : assolitsPercent >= 50 ? 'medium' : 'low'}">${assolitsPercent}%</td>
+                <td class="percentage ${naPercent <= 20 ? 'high' : naPercent <= 40 ? 'medium' : 'low'}">${naPercent}%</td>
+            </tr>
+        `;
+    });
+    
+    table.querySelector('tbody').innerHTML = html;
+}
+
+function actualitzarEstadistiquesPerTrimestre() {
+    const table = document.getElementById('trimestreStatsTable');
+    if (!table) return;
+    
+    if (filteredData.length === 0) {
+        table.querySelector('tbody').innerHTML = '<tr><td colspan="4">No hi ha dades disponibles</td></tr>';
+        return;
+    }
+    
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    let html = '';
+    
+    trimestres.forEach(trimestre => {
+        const trimestreData = filteredData.filter(item => item.trimestre === trimestre);
+        if (trimestreData.length === 0) return;
+        
+        const total = trimestreData.length;
+        const assolits = trimestreData.filter(item => item.assoliment !== 'NA').length;
+        const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+        
+        const assolitsPercent = ((assolits / total) * 100).toFixed(1);
+        const naPercent = ((na / total) * 100).toFixed(1);
+        
+        const trimestreName = {
+            '1r trim': '1r Trimestre',
+            '2n trim': '2n Trimestre',
+            '3r trim': '3r Trimestre',
+            'final': 'Final'
+        }[trimestre];
+        
+        html += `
+            <tr>
+                <td>${trimestreName}</td>
+                <td>${total}</td>
+                <td class="percentage ${assolitsPercent >= 70 ? 'high' : assolitsPercent >= 50 ? 'medium' : 'low'}">${assolitsPercent}%</td>
+                <td class="percentage ${naPercent <= 20 ? 'high' : naPercent <= 40 ? 'medium' : 'low'}">${naPercent}%</td>
+            </tr>
+        `;
+    });
+    
+    table.querySelector('tbody').innerHTML = html;
+}
+
+// ===== COMPARATIVE FUNCTIONS =====
+function inicialitzarComparatives() {
+    console.log('📊 Inicialitzant comparatives...');
+    
+    // Add event listeners for comparative controls
+    const exportBtn = document.getElementById('exportComparativaAvancada');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportComparativaAvancada);
+    }
+}
+
+function actualitzarComparativaAvancada() {
+    const content = document.getElementById('comparativaAvancadaContent');
+    if (!content) return;
+    
+    if (filteredData.length === 0) {
+        content.innerHTML = '<div class="text-center" style="padding: var(--space-xl); color: var(--neutral-500);">No hi ha dades disponibles</div>';
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    
+    let assignaturesHTML = '';
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        const totalAssignatura = assignaturaData.length;
+        const assolitsAssignatura = assignaturaData.filter(item => item.assoliment !== 'NA').length;
+        const assolitsPercent = ((assolitsAssignatura / totalAssignatura) * 100).toFixed(1);
+        
+        let trimestresHTML = '';
+        
+        trimestres.forEach(trimestre => {
+            const trimestreData = assignaturaData.filter(item => item.trimestre === trimestre);
+            if (trimestreData.length === 0) {
+                trimestresHTML += `
+                    <div class="comparativa-avancada-trimestre">
+                        <div class="comparativa-avancada-trimestre-header">
+                            <h5 class="comparativa-avancada-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
+                            <span class="comparativa-avancada-trimestre-total">0 avaluacions</span>
+                        </div>
+                        <div class="comparativa-avancada-progress-bars">
+                            <div class="text-center" style="color: var(--neutral-500); padding: var(--space-lg);">No hi ha dades</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const total = trimestreData.length;
+            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+            
+            const naPercent = ((na / total) * 100).toFixed(1);
+            const asPercent = ((as / total) * 100).toFixed(1);
+            const anPercent = ((an / total) * 100).toFixed(1);
+            const aePercent = ((ae / total) * 100).toFixed(1);
+            
+            trimestresHTML += `
+                <div class="comparativa-avancada-trimestre">
+                    <div class="comparativa-avancada-trimestre-header">
+                        <h5 class="comparativa-avancada-trimestre-title">${trimestre === '1r trim' ? '1r Trimestre' : trimestre === '2n trim' ? '2n Trimestre' : trimestre === '3r trim' ? '3r Trimestre' : 'Final'}</h5>
+                        <span class="comparativa-avancada-trimestre-total">${total} avaluacions</span>
+                    </div>
+                    <div class="comparativa-avancada-progress-bars">
+                        <div class="comparativa-avancada-progress-item">
+                            <span class="comparativa-avancada-progress-label">NA</span>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill na" style="width: ${naPercent}%"></div>
+                            </div>
+                            <span class="comparativa-avancada-progress-value">${naPercent}%</span>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <span class="comparativa-avancada-progress-label">AS</span>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill as" style="width: ${asPercent}%"></div>
+                            </div>
+                            <span class="comparativa-avancada-progress-value">${asPercent}%</span>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <span class="comparativa-avancada-progress-label">AN</span>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill an" style="width: ${anPercent}%"></div>
+                            </div>
+                            <span class="comparativa-avancada-progress-value">${anPercent}%</span>
+                        </div>
+                        <div class="comparativa-avancada-progress-item">
+                            <span class="comparativa-avancada-progress-label">AE</span>
+                            <div class="comparativa-avancada-progress-bar">
+                                <div class="comparativa-avancada-progress-fill ae" style="width: ${aePercent}%"></div>
+                            </div>
+                            <span class="comparativa-avancada-progress-value">${aePercent}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        assignaturesHTML += `
+            <div class="comparativa-avancada-materia">
+                <div class="comparativa-avancada-materia-header">
+                    <h4 class="comparativa-avancada-materia-title">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        ${assignatura}
+                    </h4>
+                    <div class="comparativa-avancada-materia-stats">
+                        <div class="comparativa-avancada-stat">
+                            <span class="comparativa-avancada-stat-label">Total:</span>
+                            <span class="comparativa-avancada-stat-value">${totalAssignatura}</span>
+                        </div>
+                        <div class="comparativa-avancada-stat">
+                            <span class="comparativa-avancada-stat-label">% Assolits:</span>
+                            <span class="comparativa-avancada-stat-value">${assolitsPercent}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparativa-avancada-trimestres">
+                    ${trimestresHTML}
+                </div>
+            </div>
+        `;
+    });
+    
+    content.innerHTML = assignaturesHTML;
+}
+
+function exportComparativaAvancada() {
+    if (filteredData.length === 0) {
+        showStatus('warning', 'No hi ha dades per exportar');
+        return;
+    }
+    
+    const assignatures = [...new Set(filteredData.map(item => item.assignatura))];
+    const trimestres = ['1r trim', '2n trim', '3r trim', 'final'];
+    
+    let csvData = 'Assignatura,Trimestre,Total,NA (%),AS (%),AN (%),AE (%),% Assolits\n';
+    
+    assignatures.forEach(assignatura => {
+        const assignaturaData = filteredData.filter(item => item.assignatura === assignatura);
+        
+        trimestres.forEach(trimestre => {
+            const trimestreData = assignaturaData.filter(item => item.trimestre === trimestre);
+            if (trimestreData.length === 0) {
+                csvData += `${assignatura},${trimestre},0,0,0,0,0,0\n`;
+                return;
+            }
+            
+            const total = trimestreData.length;
+            const na = trimestreData.filter(item => item.assoliment === 'NA').length;
+            const as = trimestreData.filter(item => item.assoliment === 'AS').length;
+            const an = trimestreData.filter(item => item.assoliment === 'AN').length;
+            const ae = trimestreData.filter(item => item.assoliment === 'AE').length;
+            
+            const naPercent = ((na / total) * 100).toFixed(1);
+            const asPercent = ((as / total) * 100).toFixed(1);
+            const anPercent = ((an / total) * 100).toFixed(1);
+            const aePercent = ((ae / total) * 100).toFixed(1);
+            const assolitsPercent = (((as + an + ae) / total) * 100).toFixed(1);
+            
+            csvData += `${assignatura},${trimestre},${total},${naPercent},${asPercent},${anPercent},${aePercent},${assolitsPercent}\n`;
+        });
+    });
+    
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'comparativa_avancada.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showStatus('success', 'Comparativa avançada exportada correctament');
+}
+
+// ===== DATA MANAGEMENT FUNCTIONS =====
+async function clearData() {
+    if (confirm('Estàs segur que vols netejar totes les dades? Aquesta acció no es pot desfer.')) {
+        try {
+            showProgressBar();
+            updateProgress(50, 'Netejant dades...');
+            
+            const response = await fetch('/api/assoliments', {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentData = [];
+                filteredData = [];
+                
+                updateProgress(100, 'Completat!');
+                setTimeout(() => {
+                    hideProgressBar();
+                    showStatus('success', 'Dades netejades correctament');
+                    navigateToStep('upload');
+                }, 500);
+            } else {
+                hideProgressBar();
+                showStatus('error', result.message || 'Error netejant les dades');
+            }
+        } catch (error) {
+            hideProgressBar();
+            console.error('❌ Error netejant dades:', error);
+            showStatus('error', 'Error de connexió. Si us plau, torna-ho a provar.');
+        }
+    }
+}
 
  
