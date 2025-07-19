@@ -1360,7 +1360,18 @@ function hideHelpModal() {
 
 // ===== ACTION HANDLING =====
 function handleActionClick(event) {
-    const action = event.target.closest('[data-action]')?.dataset.action;
+    if (!event || !event.target) {
+        console.error('❌ Event o target és undefined');
+        return;
+    }
+    
+    const actionElement = event.target.closest('[data-action]');
+    if (!actionElement) {
+        console.log('🔍 No es troba element amb data-action');
+        return;
+    }
+    
+    const action = actionElement.dataset.action;
     if (!action) return;
     
     console.log(`🔘 Acció clicada: ${action}`);
@@ -1452,6 +1463,10 @@ function handleActionClick(event) {
         case 'diagnose-tabs':
             diagnosticarPestanyesAnalisi();
             showStatus('info', 'Diagnosticant pestanyes...');
+            break;
+        case 'force-analysis':
+            forçarVisualitzacióAnalisiComplet();
+            showStatus('info', 'Forçant visualització d\'anàlisi complet...');
             break;
         case 'file-select':
             // Simular clic en l'input de fitxer
@@ -3280,6 +3295,103 @@ function diagnosticarPestanyesAnalisi() {
         visiblePanes: visiblePanes.length,
         activePane: !!activePane
     };
+}
+
+// Funció per forçar la visualització de la secció d'anàlisi complet
+function forçarVisualitzacióAnalisiComplet() {
+    console.log('🔧 Forçant visualització de la secció d\'anàlisi complet...');
+    
+    // 1. Verificar que el dashboard està visible
+    const dashboardSection = document.getElementById('dashboardSection');
+    if (!dashboardSection) {
+        console.error('❌ Dashboard no trobat');
+        return;
+    }
+    
+    // Forçar visualització del dashboard
+    dashboardSection.style.display = 'block';
+    dashboardSection.style.opacity = '1';
+    dashboardSection.style.visibility = 'visible';
+    
+    // 2. Buscar la secció d'anàlisi
+    const analysisSection = dashboardSection.querySelector('.analysis-section');
+    if (!analysisSection) {
+        console.error('❌ Secció d\'anàlisi no trobada dins del dashboard');
+        return;
+    }
+    
+    // Forçar visualització de la secció d'anàlisi
+    analysisSection.style.display = 'block';
+    analysisSection.style.opacity = '1';
+    analysisSection.style.visibility = 'visible';
+    analysisSection.style.height = 'auto';
+    analysisSection.style.overflow = 'visible';
+    
+    console.log('✅ Secció d\'anàlisi forçada a mostrar');
+    
+    // 3. Buscar les pestanyes
+    const analysisTabs = analysisSection.querySelectorAll('.analysis-tab');
+    const analysisPanes = analysisSection.querySelectorAll('.analysis-pane');
+    
+    console.log(`📋 Pestanyes trobades: ${analysisTabs.length}`);
+    console.log(`📋 Panes trobades: ${analysisPanes.length}`);
+    
+    // 4. Forçar visualització de les pestanyes
+    analysisTabs.forEach((tab, index) => {
+        tab.style.display = 'inline-block';
+        tab.style.visibility = 'visible';
+        tab.style.opacity = '1';
+        console.log(`✅ Pestanya ${index + 1} (${tab.dataset.tab}) forçada a mostrar`);
+    });
+    
+    // 5. Activar la primera pestanya si no n'hi ha cap d'activa
+    const activeTab = analysisSection.querySelector('.analysis-tab.active');
+    const activePane = analysisSection.querySelector('.analysis-pane.active');
+    
+    if (!activeTab || !activePane) {
+        console.log('🔧 No hi ha pestanya activa, activant la primera...');
+        
+        // Desactivar totes
+        analysisTabs.forEach(tab => tab.classList.remove('active'));
+        analysisPanes.forEach(pane => {
+            pane.classList.remove('active');
+            pane.style.display = 'none';
+        });
+        
+        // Activar primera
+        if (analysisTabs.length > 0 && analysisPanes.length > 0) {
+            const firstTab = analysisTabs[0];
+            const firstPane = analysisPanes[0];
+            
+            firstTab.classList.add('active');
+            firstPane.classList.add('active');
+            firstPane.style.display = 'block';
+            firstPane.style.opacity = '1';
+            firstPane.style.visibility = 'visible';
+            
+            console.log(`✅ Primera pestanya activada: ${firstTab.dataset.tab}`);
+        }
+    } else {
+        // Forçar visualització del pane actiu
+        activePane.style.display = 'block';
+        activePane.style.opacity = '1';
+        activePane.style.visibility = 'visible';
+        console.log(`✅ Pane actiu forçat a mostrar: ${activePane.id}`);
+    }
+    
+    // 6. Verificar resultat
+    setTimeout(() => {
+        const visiblePanes = Array.from(analysisPanes).filter(pane => 
+            window.getComputedStyle(pane).display !== 'none'
+        );
+        console.log(`🔍 Resultat: ${visiblePanes.length} panes visibles`);
+        
+        if (visiblePanes.length > 0) {
+            showStatus('success', 'Secció d\'anàlisi complet mostrada correctament');
+        } else {
+            showStatus('error', 'Error mostrant la secció d\'anàlisi');
+        }
+    }, 100);
 }
 
  
